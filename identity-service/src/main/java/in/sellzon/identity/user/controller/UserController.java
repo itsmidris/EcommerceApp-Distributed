@@ -1,6 +1,7 @@
 package in.sellzon.identity.user.controller;
 
 import in.sellzon.identity.user.dto.request.CreateUserRequestDTO;
+import in.sellzon.identity.user.dto.response.PublicUserProfileDTO;
 import in.sellzon.identity.user.dto.response.UserResponseDTO;
 import in.sellzon.identity.user.service.UserService;
 import jakarta.validation.Valid;
@@ -26,6 +27,21 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @GetMapping("/public-profile/{id}")
+    public ResponseEntity<PublicUserProfileDTO> getPublicProfile(@PathVariable UUID id) {
+
+        UserResponseDTO user = userService.getUserById(id);
+
+        PublicUserProfileDTO response =
+                new PublicUserProfileDTO(
+                        user.getId(),
+                        user.getFirstName(),
+                        user.getLastName()
+                );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")

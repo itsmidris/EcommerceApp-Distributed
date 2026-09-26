@@ -65,7 +65,7 @@ public class SecurityConfig {
                                 "/customer/**",
                                 "/partner/**",
                                 "/admin/**").permitAll()
-                        .requestMatchers("/api/users", "/api/auth/**").permitAll()
+                        .requestMatchers("/api/users","/api/users/public-profile/**", "/api/auth/**").permitAll()
                         .requestMatchers("/api/products/**", "/api/categories/tree").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
