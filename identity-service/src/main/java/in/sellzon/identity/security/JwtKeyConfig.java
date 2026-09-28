@@ -46,7 +46,7 @@ public class JwtKeyConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(RSAKey rsaKey) {
+    public JwtDecoder jwtDecoder(RSAKey rsaKey) throws Exception {
 
         return NimbusJwtDecoder
                 .withPublicKey(rsaKey.toRSAPublicKey())
