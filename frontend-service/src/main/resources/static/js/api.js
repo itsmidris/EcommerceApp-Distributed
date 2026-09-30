@@ -1,23 +1,66 @@
 const SellzonAPI = (() => {
     /* =========================================================
-       MICROservice URLs
-       We are integrating one port at a time.
-       Identity Service = 8081
+        * Sellzon Microservice URLs
+        *
+        * Frontend UI:
+        *   8080
+        *
+        * Backend services:
+        *   Identity  : 8081
+        *   Catalog   : 8082
+        *   Order     : 8083
+        *   Cart      : 8084
+        *   Inventory : 8085
+        *   Payment   : 8086
        ========================================================= */
     const SERVICE_URLS = {
-        identity: "http://localhost:8081"
+        identity: "http://localhost:8081",
+        catalog: "http://localhost:8082"
     };
 
     function resolveUrl(url) {
         if (!url || /^https?:\/\//i.test(url)) return url;
 
-        // Identity Service owns authentication and user registration.
-        if (url.startsWith("/api/auth/") || url === "/api/users" || url.startsWith("/api/users/")) {
+        // Identity Service - authentication and users
+        if (
+            url.startsWith("/api/auth/") ||
+            url === "/api/users" ||
+            url.startsWith("/api/users/")
+        ) {
             return `${SERVICE_URLS.identity}${url}`;
         }
 
-        // Other services stay on the current frontend origin for now.
-        // They will be moved one port at a time in later steps.
+        // Catalog Service - customer catalog, seller catalog and admin catalog
+        if (
+            url.startsWith("/api/products") ||
+            url.startsWith("/api/categories/tree") ||
+            url.startsWith("/api/admin/categories") ||
+            url.startsWith("/api/admin/attributes") ||
+            url.startsWith("/api/admin/category-attributes") ||
+            url.startsWith("/api/seller/products") ||
+            url.startsWith("/api/seller/categories")
+        ) {
+            return `${SERVICE_URLS.catalog}${url}`;
+        }
+
+        // Other services will be moved one port at a time.
+        return url;
+    }
+
+    function catalogAssetUrl(url) {
+
+        if (!url) {
+            return "";
+        }
+
+        if (/^https?:\/\//i.test(url)) {
+            return url;
+        }
+
+        if (url.startsWith("/uploads/products/")) {
+            return `${SERVICE_URLS.catalog}${url}`;
+        }
+
         return url;
     }
 
@@ -79,8 +122,23 @@ const SellzonAPI = (() => {
             headers.set("Content-Type", "application/json");
         }
 
+        /*
+         * Do not send an old/expired access token to public authentication
+         * endpoints. Spring Security's bearer filter can reject an expired
+         * token before the login/refresh request reaches the controller.
+         */
+        const publicEndpoint =
+            url.startsWith("/api/auth/") ||
+            url === "/api/users" ||
+            url.startsWith("/api/users/public-profile");
+
         const accessToken = getAccessToken();
-        if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+
+        if (accessToken && !publicEndpoint) {
+            headers.set("Authorization", `Bearer ${accessToken}`);
+        } else {
+            headers.delete("Authorization");
+        }
 
         const response = await fetch(resolveUrl(url), { ...options, headers });
 
@@ -187,7 +245,7 @@ const SellzonAPI = (() => {
     }
 
     return {
-        request,json,saveAuth,resolveUrl,identityUrl,refreshAccessToken,logout,clearAuth,getAccessToken,getRefreshToken,getUser,
+        request,json,saveAuth,resolveUrl,catalogAssetUrl,identityUrl,refreshAccessToken,logout,clearAuth,getAccessToken,getRefreshToken,getUser,
         isAuthenticated,requireAuthentication,requireRole,getPortal,getExpectedRole,getLoginPath,getHomePath,
         getForgotPasswordPath,getResetPasswordPath,normalizeRole
     };

@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 <h2 class="h5 mb-3">Order items</h2>
                                 ${data.cart.items.map(i => `
                                     <div class="d-flex gap-3 border-bottom py-3">
-                                        ${i.imageUrl ? `<img src="${CustomerStore.esc(i.imageUrl)}" alt="${CustomerStore.esc(i.title)}" style="width:72px;height:72px;object-fit:contain">` : '<div class="product-placeholder" style="width:72px;height:72px"><i class="bi bi-image"></i></div>'}
+                                        ${i.imageUrl ? `<img src="${CustomerStore.esc(SellzonAPI.catalogAssetUrl(i.imageUrl))}" alt="${CustomerStore.esc(i.title)}" style="width:72px;height:72px;object-fit:contain">` : '<div class="product-placeholder" style="width:72px;height:72px"><i class="bi bi-image"></i></div>'}
                                         <div class="flex-grow-1 min-width-0">
                                             <div class="fw-semibold checkout-title">${CustomerStore.esc(i.title)}</div>
                                             <div class="small text-secondary">${CustomerStore.esc(i.brand)} · Qty ${i.quantity}</div>

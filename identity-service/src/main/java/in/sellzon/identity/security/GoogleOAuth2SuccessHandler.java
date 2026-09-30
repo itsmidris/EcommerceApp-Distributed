@@ -52,16 +52,17 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             default -> "customer";
         };
 
-        String scheme = request.getScheme();
-        int port = request.getServerPort();
+        String frontendHost = switch (portal) {
+            case "admin" -> "admin.localhost";
+            case "partner" -> "partner.localhost";
+            default -> "localhost";
+        };
 
-        String baseUrl = scheme + "://" + host;
-
-        if (!(("http".equalsIgnoreCase(scheme) && port == 80) || ("https".equalsIgnoreCase(scheme) && port == 443))) {
-            baseUrl += ":" + port;
-        }
-
-        String redirectUrl = baseUrl + "/" + portal + "/oauth2/callback.html?code=" + code;
+        String redirectUrl =
+                "http://" + frontendHost + ":8080/"
+                        + portal
+                        + "/oauth2/callback.html?code="
+                        + code;
 
         response.sendRedirect(redirectUrl);
     }

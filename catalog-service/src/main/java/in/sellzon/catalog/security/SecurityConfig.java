@@ -22,6 +22,7 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -31,7 +32,8 @@ public class SecurityConfig {
                                 "/index.html",
                                 "/css/**",
                                 "/js/**",
-                                "/images/**"
+                                "/images/**",
+                                "/uploads/products/**"
                         ).permitAll()
                         // Product/category public APIs
                         .requestMatchers(

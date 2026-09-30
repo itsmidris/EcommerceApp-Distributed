@@ -1454,7 +1454,7 @@ function renderProductImage(image) {
         escapeHtml(image.id);
 
     const imageUrl =
-        escapeHtml(image.imageUrl);
+        escapeHtml(SellzonAPI.catalogAssetUrl(image.imageUrl));
 
     const fileName =
         escapeHtml(

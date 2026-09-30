@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                     <div class="d-flex gap-2 flex-wrap mt-3" id="thumbs">
                         ${(data.images || []).map((im, i) => `
-                            <img src="${CustomerStore.esc(im.imageUrl)}" class="thumb ${i === 0 ? 'active' : ''}" data-url="${CustomerStore.esc(im.imageUrl)}" alt="">
+                            <img src="${CustomerStore.esc(SellzonAPI.catalogAssetUrl(im.imageUrl))}" class="thumb ${i === 0 ? 'active' : ''}" data-url="${CustomerStore.esc(im.imageUrl)}" alt="">
                         `).join("")}
                     </div>
                 </div>

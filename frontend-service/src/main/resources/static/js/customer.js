@@ -28,7 +28,7 @@ const CustomerStore = (() => {
 
     function image(url, cls = "product-image", alt = "") {
         return url
-            ? `<img class="${cls}" src="${esc(url)}" alt="${esc(alt)}" loading="lazy">`
+            ? `<img class="${cls}" src="${esc(SellzonAPI.catalogAssetUrl(url))}" alt="${esc(alt)}" loading="lazy">`
             : `<div class="product-placeholder"><i class="bi bi-image"></i></div>`;
     }
 

@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     <div class="cart-image d-flex align-items-center justify-content-center">
                                         ${
                                             i.imageUrl
-                                                ? `<img src="${CustomerStore.esc(i.imageUrl)}"
+                                                ? `<img src="${CustomerStore.esc(SellzonAPI.catalogAssetUrl(i.imageUrl))}"
                                                         alt="${CustomerStore.esc(i.title)}"
                                                         class="img-fluid rounded"
                                                         style="width: 90px; height: 90px; object-fit: contain;">`
