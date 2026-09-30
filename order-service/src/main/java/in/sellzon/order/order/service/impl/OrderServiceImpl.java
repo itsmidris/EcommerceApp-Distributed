@@ -10,12 +10,14 @@ import in.sellzon.order.catalog.response.CatalogProductResponse;
 import in.sellzon.order.order.dto.request.PlaceOrderRequestDTO;
 import in.sellzon.order.order.dto.response.OrderAddressResponseDTO;
 import in.sellzon.order.order.dto.response.OrderItemResponseDTO;
+import in.sellzon.order.order.dto.response.OrderPaymentContextResponseDTO;
 import in.sellzon.order.order.dto.response.OrderResponseDTO;
 import in.sellzon.order.order.entity.Order;
 import in.sellzon.order.order.entity.OrderAddressSnapshot;
 import in.sellzon.order.order.entity.OrderItem;
 import in.sellzon.order.order.entity.SellerOrder;
 import in.sellzon.order.order.enums.OrderStatus;
+import in.sellzon.order.order.enums.PaymentMethod;
 import in.sellzon.order.order.enums.PaymentStatus;
 import in.sellzon.order.order.enums.SellerOrderStatus;
 import in.sellzon.order.order.repository.OrderRepository;
@@ -166,6 +168,53 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new IllegalStateException("Order not found"));
 
         return map(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderPaymentContextResponseDTO getPaymentContext(UUID orderId) {
+        UUID customerId = currentUserService.getCurrentUserId();
+
+        Order order = orderRepository
+                .findByIdAndCustomerId(orderId, customerId)
+                .orElseThrow(() -> new IllegalStateException("Order not found"));
+
+        return new OrderPaymentContextResponseDTO(
+                order.getId(),
+                order.getOrderNumber(),
+                order.getTotalAmount(),
+                order.getPaymentMethod(),
+                order.getPaymentStatus()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void updatePaymentStatus(UUID orderId, PaymentStatus paymentStatus) {
+        UUID customerId = currentUserService.getCurrentUserId();
+
+        Order order = orderRepository
+                .findByIdAndCustomerId(orderId, customerId)
+                .orElseThrow(() -> new IllegalStateException("Order not found"));
+
+        if (paymentStatus == null) {
+            throw new IllegalArgumentException("Payment status is required");
+        }
+
+        if (order.getPaymentMethod() != PaymentMethod.ONLINE) {
+            throw new IllegalStateException("Payment status can only be changed for ONLINE orders");
+        }
+
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            return;
+        }
+
+        if (paymentStatus != PaymentStatus.PAID && paymentStatus != PaymentStatus.FAILED) {
+            throw new IllegalStateException("Unsupported payment status update");
+        }
+
+        order.setPaymentStatus(paymentStatus);
+        orderRepository.save(order);
     }
 
     private OrderResponseDTO map(Order order) {
