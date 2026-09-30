@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sellzon Admin - Attributes</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/admin/css/admin.css">
+    <link rel="stylesheet" href="/admin/css/attributes.css">
+</head>
+<body>
+<div class="admin-shell">
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-mark">S</div>
+            <div><div class="brand-name">SELLZON</div><div class="brand-subtitle">ADMIN PANEL</div></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
+            <a href="/admin/categories.html" class="sidebar-link"><i class="bi bi-diagram-3"></i><span>Categories</span></a>
+            <a href="/admin/attributes.html" class="sidebar-link active"><i class="bi bi-sliders"></i><span>Attributes</span></a>
+            <a href="/admin/category-attributes.html" class="sidebar-link"><i class="bi bi-sliders2"></i><span>Category Attributes</span></a>
+            <a href="#" class="sidebar-link disabled"><i class="bi bi-box-seam"></i><span>Products</span><small>Coming soon</small></a>
+            <a href="#" class="sidebar-link disabled"><i class="bi bi-bag-check"></i><span>Orders</span><small>Coming soon</small></a>
+            <a href="#" class="sidebar-link disabled"><i class="bi bi-people"></i><span>Users</span><small>Coming soon</small></a>
+        </nav>
+        <button class="sidebar-logout" id="logoutButton" data-logout><i class="bi bi-box-arrow-right"></i><span>Logout</span></button>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <div><div class="header-kicker">ADMINISTRATION</div><h1>Attributes</h1></div>
+            <div class="header-user">
+                <div class="header-user-text"><strong id="adminEmail">Admin</strong><span>Administrator</span></div>
+                <div class="header-avatar" id="adminAvatar">A</div>
+            </div>
+        </header>
+
+        <section class="admin-content">
+            <div id="pageAlert" class="page-alert d-none"></div>
+
+            <div class="page-title-row">
+                <div>
+                    <h2>Attribute Management</h2>
+                    <p>Define reusable product attributes and their allowed values.</p>
+                </div>
+                <button class="btn btn-primary" id="createAttributeButton">
+                    <i class="bi bi-plus-lg me-1"></i>Create Attribute
+                </button>
+            </div>
+
+            <div class="summary-grid attribute-summary">
+                <div class="summary-card"><div class="summary-icon"><i class="bi bi-sliders"></i></div><div><span>Total Attributes</span><strong id="totalAttributes">0</strong></div></div>
+                <div class="summary-card"><div class="summary-icon"><i class="bi bi-list-check"></i></div><div><span>Option Attributes</span><strong id="optionAttributes">0</strong></div></div>
+                <div class="summary-card"><div class="summary-icon"><i class="bi bi-input-cursor-text"></i></div><div><span>Simple Attributes</span><strong id="simpleAttributes">0</strong></div></div>
+            </div>
+
+            <section class="category-panel">
+                <div class="panel-header attribute-toolbar">
+                    <div><h3>Reusable Attributes</h3><p>Attributes are reusable across multiple Level 4 categories.</p></div>
+                    <div class="d-flex gap-2">
+                        <select id="typeFilter" class="form-select form-select-sm">
+                            <option value="">All types</option>
+                            <option value="TEXT">TEXT</option><option value="NUMBER">NUMBER</option>
+                            <option value="DECIMAL">DECIMAL</option><option value="BOOLEAN">BOOLEAN</option>
+                            <option value="DROPDOWN">DROPDOWN</option><option value="MULTI_SELECT">MULTI_SELECT</option>
+                        </select>
+                        <button class="btn btn-sm btn-light" id="refreshAttributesButton" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle admin-table mb-0">
+                        <thead><tr><th>Name</th><th>Code</th><th>Type</th><th>Unit</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+                        <tbody id="attributeTableBody">
+                            <tr><td colspan="6"><div class="table-loading"><div class="spinner-border spinner-border-sm"></div> Loading attributes...</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+
+<div class="modal fade" id="attributeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
+        <form id="attributeForm">
+            <div class="modal-header"><div><h5 class="modal-title" id="attributeModalTitle">Create Attribute</h5><p class="modal-subtitle" id="attributeModalSubtitle">Create a reusable product attribute.</p></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div id="attributeFormAlert" class="form-alert d-none"></div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">Attribute Name</label><input id="attributeName" class="form-control" maxlength="150" required placeholder="e.g. Connectivity"></div>
+                    <div class="col-md-6"><label class="form-label">Attribute Code</label><input id="attributeCode" class="form-control" maxlength="100" required placeholder="e.g. connectivity"><div class="form-text">Stable technical identifier.</div></div>
+                    <div class="col-md-6"><label class="form-label">Type</label><select id="attributeType" class="form-select" required><option value="">Select type</option><option value="TEXT">TEXT</option><option value="NUMBER">NUMBER</option><option value="DECIMAL">DECIMAL</option><option value="BOOLEAN">BOOLEAN</option><option value="DROPDOWN">DROPDOWN</option><option value="MULTI_SELECT">MULTI_SELECT</option></select></div>
+                    <div class="col-md-6"><label class="form-label">Unit <span class="text-muted">(optional)</span></label><input id="attributeUnit" class="form-control" maxlength="50" placeholder="e.g. cm, kg, W"></div>
+                    <div class="col-12"><label class="form-label">Description <span class="text-muted">(optional)</span></label><textarea id="attributeDescription" class="form-control" maxlength="500" rows="3" placeholder="Explain what this attribute represents."></textarea></div>
+                </div>
+                <div class="attribute-warning mt-3"><i class="bi bi-shield-check"></i><span>The code is intended to be a stable identifier. Once this attribute is used by products/categories, avoid changing its meaning.</span></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary" id="saveAttributeButton">Save Attribute</button></div>
+        </form>
+    </div></div>
+</div>
+
+<div class="modal fade" id="optionsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
+        <div class="modal-header"><div><h5 class="modal-title" id="optionsModalTitle">Attribute Options</h5><p class="modal-subtitle" id="optionsModalSubtitle"></p></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <div id="optionsAlert" class="form-alert d-none"></div>
+            <div class="option-create-box">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5"><label class="form-label">Value</label><input id="optionValue" class="form-control" maxlength="150" placeholder="e.g. Bluetooth"></div>
+                    <div class="col-md-5"><label class="form-label">Code</label><input id="optionCode" class="form-control" maxlength="100" placeholder="e.g. bluetooth"></div>
+                    <div class="col-md-2"><button class="btn btn-primary w-100" id="createOptionButton">Add</button></div>
+                </div>
+            </div>
+            <div class="options-list" id="optionsList"><div class="table-loading"><div class="spinner-border spinner-border-sm"></div> Loading options...</div></div>
+        </div>
+    </div></div>
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="confirmTitle">Confirm</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body"><p id="confirmMessage" class="mb-0"></p></div>
+        <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger" id="confirmActionButton">Deactivate</button></div>
+    </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/admin/js/attributes.js"></script>
+</body>
+</html>

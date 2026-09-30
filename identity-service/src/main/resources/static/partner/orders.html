@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Sellzon Partner - Orders</title>
+    <link rel="icon" href="/images/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/partner-products.css">
+    <link rel="stylesheet" href="/css/partner-orders.css">
+</head>
+<body class="partner-page">
+<div class="container-fluid min-vh-100">
+    <div class="row min-vh-100">
+        <aside class="col-lg-2 d-none d-lg-flex flex-column border-end bg-white p-0">
+            <div class="p-4 border-bottom">
+                <a href="/partner/dashboard.html" class="text-decoration-none fw-bold fs-4 text-dark">SELLZON</a>
+                <div class="small text-secondary mt-1">Partner Center</div>
+            </div>
+            <nav class="p-3 flex-grow-1">
+                <a href="/partner/dashboard.html" class="partner-nav-link"><i class="bi bi-grid-1x2 me-2"></i>Dashboard</a>
+                <a href="/partner/products.html" class="partner-nav-link"><i class="bi bi-box-seam me-2"></i>Products</a>
+                <a href="/partner/orders.html" class="partner-nav-link active"><i class="bi bi-bag-check me-2"></i>Orders</a>
+                <a href="/partner/inventory.html" class="partner-nav-link"><i class="bi bi-boxes me-2"></i>Inventory</a>
+            </nav>
+            <div class="p-3 border-top">
+                <button type="button" class="sidebar-logout" data-logout>
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+        <main class="col-lg-10 col-12 p-0">
+            <header class="px-4 py-3 border-bottom bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-secondary small">Partner Center</div>
+                    <h1 class="h4 mb-0">Orders</h1>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="sellerName" class="small fw-semibold"></span>
+                </div>
+            </header>
+            <section class="p-4">
+                <div id="ordersAlert" class="alert d-none" role="alert"></div>
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="order-stat-card">
+                            <div class="order-stat-icon"><i class="bi bi-bag-check"></i></div>
+                            <div>
+                                <span class="stat-label">Total</span>
+                                <strong id="totalOrders">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="order-stat-card">
+                            <div class="order-stat-icon"><i class="bi bi-hourglass-split"></i></div>
+                            <div>
+                                <span class="stat-label">Placed</span>
+                                <strong id="placedOrders">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="order-stat-card">
+                            <div class="order-stat-icon"><i class="bi bi-box-seam"></i></div>
+                            <div>
+                                <span class="stat-label">Processing</span>
+                                <strong id="processingOrders">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="order-stat-card">
+                            <div class="order-stat-icon"><i class="bi bi-truck"></i></div>
+                            <div>
+                                <span class="stat-label">Shipped</span>
+                                <strong id="shippedOrders">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-panel">
+                    <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-3">
+                        <div>
+                            <h2 class="h5 mb-1">Customer orders</h2>
+                            <p class="text-secondary small mb-0">Only orders containing your products are shown.</p>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <div class="input-group order-search">
+                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                <input id="searchInput" type="search" class="form-control" placeholder="Order number, customer...">
+                            </div>
+                            <select id="statusFilter" class="form-select order-status-filter">
+                                <option value="ALL">All Status</option>
+                                <option value="PLACED">Placed</option>
+                                <option value="CONFIRMED">Confirmed</option>
+                                <option value="PROCESSING">Processing</option>
+                                <option value="SHIPPED">Shipped</option>
+                                <option value="DELIVERED">Delivered</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle order-table mb-0">
+                            <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Amount</th>
+                                <th>Payment</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-secondary">
+                                    <div class="spinner-border spinner-border-sm me-2"></div>Loading orders...
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="emptyState" class="text-center py-5 d-none">
+                        <i class="bi bi-bag-x fs-1 text-secondary"></i>
+                        <h3 class="h6 mt-3">No orders found</h3>
+                        <p class="text-secondary small">Orders containing your products will appear here.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/partner-orders.js"></script>
+</body>
+</html>

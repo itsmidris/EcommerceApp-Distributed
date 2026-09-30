@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Sellzon Partner - Inventory</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/partner-products.css">
+    <link rel="stylesheet" href="/css/partner-inventory.css">
+</head>
+<body class="partner-page">
+<div class="container-fluid min-vh-100">
+    <div class="row min-vh-100">
+        <aside class="col-lg-2 d-none d-lg-flex flex-column border-end bg-white p-0">
+            <div class="p-4 border-bottom">
+                <a href="/partner/dashboard.html" class="text-decoration-none fw-bold fs-4 text-dark">SELLZON</a>
+                <div class="small text-secondary mt-1">Partner Center</div>
+            </div>
+            <nav class="p-3 flex-grow-1">
+                <a href="/partner/dashboard.html" class="partner-nav-link"><i class="bi bi-grid-1x2 me-2"></i>Dashboard</a>
+                <a href="/partner/products.html" class="partner-nav-link"><i class="bi bi-box-seam me-2"></i>Products</a>
+                <a href="/partner/orders.html" class="partner-nav-link"><i class="bi bi-bag-check me-2"></i>Orders</a>
+                <a href="/partner/inventory.html" class="partner-nav-link active"><i class="bi bi-boxes me-2"></i>Inventory</a>
+            </nav>
+            <div class="p-3 border-top">
+                <button type="button" class="sidebar-logout" data-logout>
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+        <main class="col-lg-10 col-12 p-0">
+            <header class="px-4 py-3 border-bottom bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-secondary small">Partner Center</div>
+                    <h1 class="h4 mb-0">Inventory</h1>
+                </div>
+                <span id="sellerName" class="small fw-semibold"></span>
+            </header>
+            <section class="p-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="inventory-stat-card">
+                            <div class="inventory-stat-icon"><i class="bi bi-boxes"></i></div>
+                            <div>
+                                <span class="stat-label">Products</span>
+                                <strong id="totalProducts">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="inventory-stat-card">
+                            <div class="inventory-stat-icon"><i class="bi bi-check2-circle"></i></div>
+                            <div>
+                                <span class="stat-label">In Stock</span>
+                                <strong id="inStockProducts">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="inventory-stat-card">
+                            <div class="inventory-stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                            <div>
+                                <span class="stat-label">Low Stock</span>
+                                <strong id="lowStockProducts">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="inventory-stat-card">
+                            <div class="inventory-stat-icon"><i class="bi bi-x-circle"></i></div>
+                            <div>
+                                <span class="stat-label">Out of Stock</span>
+                                <strong id="outOfStockProducts">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="inventory-panel">
+                    <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-3">
+                        <div>
+                            <h2 class="h5 mb-1">Inventory</h2>
+                            <p class="text-secondary small mb-0">Manage stock for your products.</p>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <div class="input-group inventory-search">
+                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                <input id="searchInput" type="search" class="form-control" placeholder="Product, SKU...">
+                            </div>
+                            <select id="stockFilter" class="form-select inventory-filter">
+                                <option value="ALL">All Stock</option>
+                                <option value="IN_STOCK">In Stock</option>
+                                <option value="LOW">Low Stock</option>
+                                <option value="OUT">Out of Stock</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle inventory-table mb-0">
+                            <thead>
+                            <tr>
+                                <th>PRODUCT</th>
+                                <th>SKU</th>
+                                <th>STOCK</th>
+                                <th>THRESHOLD</th>
+                                <th>STATUS</th>
+                                <th class="text-end">ACTION</th>
+                            </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-secondary">
+                                    <div class="spinner-border spinner-border-sm me-2"></div>Loading inventory...
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="emptyState" class="text-center py-5 d-none">
+                        <i class="bi bi-boxes fs-1 text-secondary"></i>
+                        <h3 class="h6 mt-3">No inventory found</h3>
+                        <p class="text-secondary small mb-0">Your active products will appear here.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<div class="modal fade" id="inventoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Manage Inventory</h5>
+                    <div id="inventoryModalProduct" class="small text-secondary"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalAlert" class="alert d-none"></div>
+                <div class="inventory-current-card mb-4">
+                    <div>
+                        <span class="small text-secondary">Current stock</span>
+                        <strong id="currentStock">0</strong>
+                    </div>
+                    <div>
+                        <span class="small text-secondary">Low-stock threshold</span>
+                        <strong id="currentThreshold">5</strong>
+                    </div>
+                    <div>
+                        <label for="inventoryThreshold" class="small text-secondary">Change threshold</label>
+                        <div class="input-group input-group-sm mt-1">
+                            <input id="inventoryThreshold" type="number" min="0" max="1000000" class="form-control" value="5">
+                            <button type="button" id="saveThresholdButton" class="btn btn-outline-dark">Save</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Action</label>
+                    <select id="inventoryOperation" class="form-select">
+                        <option value="ADD">Add Stock</option>
+                        <option value="REMOVE">Remove Stock</option>
+                        <option value="SET">Set Stock</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="inventoryQuantity" class="form-label">Quantity</label>
+                    <input id="inventoryQuantity" type="number" min="0" step="1" class="form-control" value="0">
+                </div>
+                <div class="mb-3">
+                    <label for="inventoryType" class="form-label">Reason type</label>
+                    <select id="inventoryType" class="form-select">
+                        <option value="RESTOCK">Restock</option>
+                        <option value="RETURN">Customer Return</option>
+                        <option value="DAMAGED">Damaged</option>
+                        <option value="LOST">Lost</option>
+                        <option value="MANUAL_CORRECTION">Manual Correction</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="inventoryReason" class="form-label">Note</label>
+                    <textarea id="inventoryReason" class="form-control" rows="3" maxlength="500" placeholder="Optional note"></textarea>
+                </div>
+                <hr class="my-4">
+                <h6>Recent inventory history</h6>
+                <div id="inventoryHistory" class="inventory-history">
+                    <div class="text-secondary small">Loading history...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="saveInventoryButton" class="btn btn-dark">
+                    <span id="saveInventorySpinner" class="spinner-border spinner-border-sm d-none me-1"></span>Save Stock
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/partner-inventory.js"></script>
+</body>
+</html>

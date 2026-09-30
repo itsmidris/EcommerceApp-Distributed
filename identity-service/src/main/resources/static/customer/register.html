@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <title>Sellzon | Customer Sign Up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body class="auth-page">
+
+<main class="auth-shell">
+    <section class="auth-card">
+
+        <div class="auth-form-side">
+            <div class="form-content">
+
+                <div class="mobile-brand">SELLZON</div>
+
+                <h2>Sign Up</h2>
+
+                <div id="authAlert" class="alert d-none" role="alert"></div>
+
+                <form id="registerForm" novalidate>
+
+                    <div class="row g-3">
+
+                        <div class="col-6">
+                            <div class="input-group auth-input mb-0">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person"></i>
+                                    </span>
+                                <input
+                                        id="firstName"
+                                        class="form-control"
+                                        placeholder="First Name"
+                                        maxlength="50"
+                                        autocomplete="given-name">
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="input-group auth-input mb-0">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person"></i>
+                                    </span>
+                                <input
+                                        id="lastName"
+                                        class="form-control"
+                                        placeholder="Last Name"
+                                        maxlength="50"
+                                        autocomplete="family-name">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="input-group auth-input mt-3">
+                            <span class="input-group-text">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                        <input
+                                id="registerEmail"
+                                type="email"
+                                class="form-control"
+                                placeholder="Email"
+                                maxlength="100"
+                                autocomplete="email">
+                    </div>
+
+                    <div class="input-group auth-input">
+                            <span class="input-group-text">
+                                <i class="bi bi-phone"></i>
+                            </span>
+                        <span class="input-group-text phone-prefix">+91</span>
+                        <input
+                                id="phoneNumber"
+                                type="tel"
+                                maxlength="10"
+                                class="form-control"
+                                placeholder="Phone Number"
+                                autocomplete="tel">
+                    </div>
+
+                    <div class="input-group auth-input">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                        <input
+                                id="registerPassword"
+                                type="password"
+                                class="form-control"
+                                placeholder="Password"
+                                maxlength="100"
+                                autocomplete="new-password">
+                        <button
+                                type="button"
+                                class="btn password-toggle"
+                                data-password-target="registerPassword"
+                                aria-label="Show password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+
+                    <div class="input-group auth-input">
+                        <span class="input-group-text">
+                            <i class="bi bi-shield-lock"></i>
+                        </span>
+                        <input
+                                id="confirmPassword"
+                                type="password"
+                                class="form-control"
+                                placeholder="Confirm Password"
+                                maxlength="100"
+                                autocomplete="new-password">
+                        <button
+                                type="button"
+                                class="btn password-toggle"
+                                data-password-target="confirmPassword"
+                                aria-label="Show password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+
+                    <button
+                            type="submit"
+                            class="btn auth-primary-btn"
+                            id="registerBtn">
+                        Sign Up
+                        <span
+                                class="spinner-border spinner-border-sm d-none"
+                                id="registerSpinner">
+            </span>
+                    </button>
+
+                </form>
+
+                <div class="social-divider">
+                    or sign up with
+                </div>
+
+                <div class="social-buttons">
+                    <button
+                            type="button"
+                            class="social-btn"
+                            title="Sign up with Google"
+                            onclick="window.location.href=SellzonAPI.identityUrl('/oauth2/authorization/google')">
+                        <span class="google-icon">G</span>
+                    </button>
+                </div>
+
+                <p class="mobile-switch">
+                    Already have an account?
+                    <a href="/customer/login.html">Login</a>
+                </p>
+
+            </div>
+        </div>
+
+        <div class="auth-panel auth-panel-right">
+            <div class="panel-content">
+                <div class="brand-mark">S</div>
+                <h1>Welcome Back!</h1>
+                <p>Already have an account?</p>
+                <a href="/customer/login.html" class="btn btn-outline-light auth-outline-btn">
+                    Login
+                </a>
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+</body>
+</html>

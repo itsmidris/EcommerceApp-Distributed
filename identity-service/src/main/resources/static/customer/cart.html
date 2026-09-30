@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/images/favicon.svg">
+    <title>Sellzon | Cart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/customer.css">
+</head>
+
+<body>
+    <header class="customer-navbar">
+        <div class="container-fluid px-3 px-lg-4 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <a class="brand" href="/customer/index.html">SELLZON</a>
+
+                <div>
+                    <a href="/customer/products.html" class="btn btn-outline-dark btn-sm me-2">Continue shopping</a>
+                    <button data-logout class="btn btn-outline-secondary btn-sm">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container py-4">
+        <h1 class="h3 mb-4">Shopping Cart</h1>
+
+        <div id="cartRoot">
+            <div class="text-center py-5">
+                <div class="spinner-border"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/customer.js"></script>
+    <script src="/js/customer-cart.js"></script>
+</body>
+
+</html>

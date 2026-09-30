@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/images/favicon.svg">
+    <title>Sellzon | My Account</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Existing customer CSS -->
+    <link rel="stylesheet" href="/css/customer.css">
+
+    <!-- Account CSS -->
+    <link rel="stylesheet" href="/css/customer-account.css">
+</head>
+
+<body>
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
+<header class="customer-navbar">
+    <div class="container-fluid px-3 px-lg-4 py-2">
+        <div class="account-topbar">
+            <!-- BRAND -->
+            <a class="brand" href="/customer/index.html">
+                SELLZON
+            </a>
+
+            <!-- SEARCH -->
+            <div class="account-search">
+                <form id="accountSearchForm">
+                    <div class="input-group">
+                        <input id="accountSearch" class="form-control" placeholder="Search products, brands..." autocomplete="off">
+                        <button class="btn btn-dark" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- HEADER ACTIONS -->
+            <div class="top-actions">
+                <!-- ACCOUNT -->
+                <a class="top-account active" href="/customer/account.html">
+                    <i class="bi bi-person-circle"></i>
+                    <span>My Account</span>
+                </a>
+
+                <!-- CART -->
+                <a class="top-cart" href="/customer/cart.html">
+                    <i class="bi bi-cart3"></i>
+                    <span data-cart-count>0</span>
+                </a>
+
+                <!-- LOGOUT -->
+                <button class="btn btn-outline-secondary btn-sm" type="button" data-logout>
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- =========================================================
+     MAIN
+     ========================================================= -->
+<main class="account-page">
+    <div class="container py-4 py-lg-5">
+        <!-- =====================================================
+             WELCOME
+             ===================================================== -->
+        <section class="account-welcome mb-4">
+            <div>
+                <div class="eyebrow">MY ACCOUNT</div>
+                <h1 id="welcomeName">Welcome back</h1>
+                <p>
+                    Manage your orders, cart, addresses and
+                    account settings from one place.
+                </p>
+            </div>
+            <div class="account-avatar" id="accountAvatar">S</div>
+        </section>
+
+        <div class="row g-4">
+            <!-- =================================================
+                 SIDEBAR
+                 ================================================= -->
+            <aside class="col-lg-3">
+                <div class="account-sidebar">
+                    <!-- CUSTOMER MINI PROFILE -->
+                    <div class="account-user-mini">
+                        <div class="account-avatar small" id="sidebarAvatar">S</div>
+                        <div class="user-copy">
+                            <strong id="sidebarEmail">Customer</strong>
+                            <span>Sellzon Customer</span>
+                        </div>
+                    </div>
+
+                    <!-- NAVIGATION -->
+                    <nav class="account-nav">
+                        <!-- OVERVIEW -->
+                        <button class="account-nav-item active" data-section="overview">
+                            <i class="bi bi-grid-1x2"></i>
+                            <span>Overview</span>
+                        </button>
+
+                        <!-- ORDERS -->
+                        <a class="account-nav-item" href="/customer/orders.html">
+                            <i class="bi bi-bag-check"></i>
+                            <span>My Orders</span>
+                        </a>
+
+                        <!-- CART -->
+                        <a class="account-nav-item" href="/customer/cart.html">
+                            <i class="bi bi-cart3"></i>
+                            <span>My Cart</span>
+                            <span class="nav-count" data-cart-count>0</span>
+                        </a>
+
+                        <!-- ADDRESSES -->
+                        <button class="account-nav-item" data-section="addresses">
+                            <i class="bi bi-geo-alt"></i>
+                            <span>Addresses</span>
+                        </button>
+
+                        <!-- PROFILE -->
+                        <button class="account-nav-item" data-section="profile">
+                            <i class="bi bi-person"></i>
+                            <span>Profile</span>
+                        </button>
+
+                        <!-- SECURITY -->
+                        <button class="account-nav-item" data-section="security">
+                            <i class="bi bi-shield-lock"></i>
+                            <span>Security</span>
+                        </button>
+
+                        <div class="account-nav-divider"></div>
+
+                        <!-- SHOP -->
+                        <a class="account-nav-item" href="/customer/products.html">
+                            <i class="bi bi-shop"></i>
+                            <span>Continue Shopping</span>
+                        </a>
+
+                        <!-- LOGOUT -->
+                        <button class="account-nav-item danger" data-logout>
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Logout</span>
+                        </button>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- =================================================
+                 CONTENT
+                 ================================================= -->
+            <section class="col-lg-9">
+                <!-- =================================================
+                     OVERVIEW
+                     ================================================= -->
+                <div class="account-section active" id="section-overview">
+                    <!-- STAT CARDS -->
+                    <div class="row g-3 mb-4">
+                        <!-- ORDERS -->
+                        <div class="col-md-4">
+                            <a href="/customer/orders.html" class="stat-card">
+                                    <span class="stat-icon">
+                                        <i class="bi bi-bag-check"></i>
+                                    </span>
+                                <span>
+                                        <small>Orders</small>
+                                        <strong id="ordersCount">-</strong>
+                                    </span>
+                            </a>
+                        </div>
+
+                        <!-- CART -->
+                        <div class="col-md-4">
+                            <a href="/customer/cart.html" class="stat-card">
+                                    <span class="stat-icon">
+                                        <i class="bi bi-cart3"></i>
+                                    </span>
+                                <span>
+                                        <small>Cart Items</small>
+                                        <strong id="cartCount">-</strong>
+                                    </span>
+                            </a>
+                        </div>
+
+                        <!-- ADDRESS -->
+                        <div class="col-md-4">
+                            <button class="stat-card text-start w-100" data-section="addresses">
+                                    <span class="stat-icon">
+                                        <i class="bi bi-geo-alt"></i>
+                                    </span>
+                                <span>
+                                        <small>Delivery</small>
+                                        <strong>Addresses</strong>
+                                    </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- QUICK ACTIONS -->
+                    <div class="account-panel mb-4">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>Quick Actions</h2>
+                                <p>Everything you commonly need.</p>
+                            </div>
+                        </div>
+
+                        <div class="quick-grid">
+                            <!-- ORDERS -->
+                            <a href="/customer/orders.html" class="quick-card">
+                                    <span class="quick-icon">
+                                        <i class="bi bi-box-seam"></i>
+                                    </span>
+                                <span>
+                                        <strong>Track Orders</strong>
+                                        <small>View order status and details</small>
+                                    </span>
+                                <i class="bi bi-chevron-right arrow"></i>
+                            </a>
+
+                            <!-- CART -->
+                            <a href="/customer/cart.html" class="quick-card">
+                                    <span class="quick-icon">
+                                        <i class="bi bi-cart3"></i>
+                                    </span>
+                                <span>
+                                        <strong>Shopping Cart</strong>
+                                        <small>Review items before checkout</small>
+                                    </span>
+                                <i class="bi bi-chevron-right arrow"></i>
+                            </a>
+
+                            <!-- ADDRESSES -->
+                            <button class="quick-card text-start" data-section="addresses">
+                                    <span class="quick-icon">
+                                        <i class="bi bi-house-door"></i>
+                                    </span>
+                                <span>
+                                        <strong>Delivery Addresses</strong>
+                                        <small>Manage delivery information</small>
+                                    </span>
+                                <i class="bi bi-chevron-right arrow"></i>
+                            </button>
+
+                            <!-- PROFILE -->
+                            <button class="quick-card text-start" data-section="profile">
+                                    <span class="quick-icon">
+                                        <i class="bi bi-person-circle"></i>
+                                    </span>
+                                <span>
+                                        <strong>My Profile</strong>
+                                        <small>View account information</small>
+                                    </span>
+                                <i class="bi bi-chevron-right arrow"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- RECENT ORDERS -->
+                    <div class="account-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>Recent Orders</h2>
+                                <p>Your latest orders at a glance.</p>
+                            </div>
+                            <a href="/customer/orders.html" class="btn btn-outline-dark btn-sm">
+                                View All
+                            </a>
+                        </div>
+
+                        <div id="recentOrders">
+                            <div class="loading">
+                                <span class="spinner-border spinner-border-sm"></span>
+                                Loading orders...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================================================
+                     ADDRESSES
+                     ================================================= -->
+                <div class="account-section" id="section-addresses">
+                    <div class="account-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>Saved Addresses</h2>
+                                <p>Manage delivery addresses for faster checkout.</p>
+                            </div>
+                            <a class="btn btn-dark btn-sm" href="/customer/checkout.html">
+                                <i class="bi bi-plus-lg me-1"></i>
+                                Manage at Checkout
+                            </a>
+                        </div>
+
+                        <div class="address-note">
+                            <i class="bi bi-info-circle"></i>
+                            <div>
+                                <strong>Address management</strong>
+                                <p>
+                                    The current checkout flow already
+                                    uses customer-owned addresses.
+                                    This account page does not call
+                                    an invented CRUD endpoint.
+                                    Once address CRUD endpoints are
+                                    added, this section can display,
+                                    edit, delete and set a default
+                                    address.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="bi bi-geo-alt"></i>
+                            </div>
+                            <h3>Saved addresses</h3>
+                            <p>
+                                Choose or manage your delivery address
+                                from checkout for now.
+                            </p>
+                            <a href="/customer/checkout.html" class="btn btn-outline-dark">
+                                Open Checkout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================================================
+                     PROFILE
+                     ================================================= -->
+                <div class="account-section" id="section-profile">
+                    <div class="account-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>My Profile</h2>
+                                <p>Your authenticated Sellzon account.</p>
+                            </div>
+                        </div>
+
+                        <div class="profile-hero">
+                            <div class="account-avatar large" id="profileAvatar">S</div>
+                            <div>
+                                <h3 id="profileEmail">Customer</h3>
+                                <p>Customer account</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <div class="profile-field">
+                                    <small>Email</small>
+                                    <strong id="profileEmailField">-</strong>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="profile-field">
+                                    <small>Customer ID</small>
+                                    <strong id="profileUserId">-</strong>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="profile-field">
+                                    <small>Role</small>
+                                    <strong id="profileRole">CUSTOMER</strong>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="profile-field">
+                                    <small>Session</small>
+                                    <strong>Authenticated</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-note">
+                            <i class="bi bi-info-circle"></i>
+                            First name, last name and phone number are
+                            not stored in the current browser auth object,
+                            so this UI does not guess them.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================================================
+                     SECURITY
+                     ================================================= -->
+                <div class="account-section" id="section-security">
+                    <div class="account-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>Security</h2>
+                                <p>Manage access to your Sellzon account.</p>
+                            </div>
+                        </div>
+
+                        <!-- PASSWORD -->
+                        <div class="security-row">
+                                <span class="security-icon">
+                                    <i class="bi bi-key"></i>
+                                </span>
+                            <div>
+                                <strong>Password</strong>
+                                <small>Use the existing secure password reset flow.</small>
+                            </div>
+                            <a href="/customer/forgot-password.html" class="btn btn-outline-dark btn-sm ms-auto">
+                                Reset Password
+                            </a>
+                        </div>
+
+                        <!-- LOGOUT -->
+                        <div class="security-row">
+                                <span class="security-icon">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                </span>
+                            <div>
+                                <strong>Sign Out</strong>
+                                <small>End your current Sellzon session.</small>
+                            </div>
+                            <button data-logout class="btn btn-outline-danger btn-sm ms-auto">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<!-- Existing JS -->
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/customer.js"></script>
+
+<!-- New account JS -->
+<script src="/js/customer-account.js"></script>
+</body>
+
+</html>

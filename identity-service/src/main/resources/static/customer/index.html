@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/images/favicon.svg">
+    <title>Sellzon | Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/customer.css">
+</head>
+
+<body>
+<header class="customer-navbar">
+    <div class="container-fluid px-3 px-lg-4 py-2">
+        <div class="d-flex align-items-center gap-3">
+            <a class="brand" href="/customer/index.html">SELLZON</a>
+
+            <form id="catalogSearchForm" class="flex-grow-1 search-box mx-auto" style="max-width:760px">
+                <div class="input-group">
+                    <input id="catalogSearch" class="form-control" placeholder="Search products, brands...">
+                    <button class="btn btn-dark">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="d-flex align-items-center gap-2">
+
+                <!-- ACCOUNT -->
+                <a
+                        class="btn btn-outline-dark btn-sm d-none"
+                        href="/customer/account.html"
+                        id="accountLink"
+                >
+                    <i class="bi bi-person-circle me-1"></i>
+                    Account
+                </a>
+
+
+                <!-- LOGIN -->
+                <a
+                        class="btn btn-outline-dark btn-sm"
+                        href="/customer/login.html"
+                        id="loginLink"
+                >
+                    Login
+                </a>
+
+
+                <!-- CART -->
+                <a
+                        class="btn btn-dark position-relative"
+                        href="/customer/cart.html"
+                >
+                    <i class="bi bi-cart3"></i>
+
+                    <span
+                            data-cart-count
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger"
+                    >
+            0
+        </span>
+                </a>
+
+
+                <!-- LOGOUT -->
+                <button
+                        class="btn btn-outline-secondary btn-sm d-none"
+                        data-logout
+                >
+                    Logout
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <nav class="category-strip">
+        <div class="container-fluid px-3 px-lg-4" id="categoryNav"></div>
+    </nav>
+</header>
+
+<main class="container py-4">
+    <section class="hero p-4 p-lg-5 mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold">Shop on Sellzon</h1>
+                <p class="lead mb-3">Browse products from marketplace sellers. Login is required when you add something to your cart.</p>
+                <a href="/customer/products.html" class="btn btn-light btn-lg">Explore Products</a>
+            </div>
+
+            <div class="col-lg-4 text-center d-none d-lg-block">
+                <i class="bi bi-bag-heart display-1"></i>
+            </div>
+        </div>
+    </section>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0">Latest products</h2>
+        <a href="/customer/products.html" class="text-dark">View all</a>
+    </div>
+
+    <div id="homeProducts" class="row g-3"></div>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/customer.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const { response, data } = await SellzonAPI.json('/api/products?page=0&size=8');
+        const root = document.getElementById('homeProducts');
+
+        if (response.ok && data?.content?.length) {
+            root.innerHTML = data.content.map(p => `
+                <div class="col-6 col-md-4 col-xl-3">
+                    <article class="product-card">
+                        <a class="text-decoration-none text-dark" href="/customer/product-details.html?id=${encodeURIComponent(p.marketplaceProductId)}">
+                            ${CustomerStore.image(p.primaryImageUrl, 'product-image', p.title)}
+                            <div class="p-3">
+                                <div class="small text-secondary">${CustomerStore.esc(p.brand)}</div>
+                                <h3 class="h6 mt-1">${CustomerStore.esc(p.title)}</h3>
+                                <span class="price">${CustomerStore.money(p.sellingPrice)}</span>
+                                <div class="mrp">${CustomerStore.money(p.mrp)}</div>
+                            </div>
+                        </a>
+                    </article>
+                </div>
+            `).join('');
+        } else {
+            root.innerHTML = '<div class="col-12"><div class="alert alert-light border">No products are available yet.</div></div>';
+        }
+
+    });
+</script>
+</body>
+
+</html>
