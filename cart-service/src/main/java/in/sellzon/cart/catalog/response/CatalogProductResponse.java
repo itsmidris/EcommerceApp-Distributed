@@ -17,6 +17,7 @@ public record CatalogProductResponse(
         BigDecimal mrp,
         BigDecimal sellingPrice,
         Integer stockQuantity,
-        String status
+        String status,
+        String imageUrl
 ) {
 }

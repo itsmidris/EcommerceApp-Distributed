@@ -79,9 +79,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                                         ${
                                             i.imageUrl
                                                 ? `<img src="${CustomerStore.esc(
-                                                        i.imageUrl.startsWith("http")
-                                                            ? i.imageUrl
-                                                            : "http://localhost:8082" + i.imageUrl
+                                                        SellzonAPI.catalogAssetUrl(i.imageUrl)
                                                     )}"
                                                         alt="${CustomerStore.esc(i.title)}"
                                                         class="img-fluid rounded"

@@ -9,17 +9,37 @@ import org.springframework.web.client.RestClient;
 public class RestClientConfig {
 
     @Bean
-    public RestClient identityRestClient(@Value("${sellzon.services.identity.base-url}") String baseUrl) {
-        return RestClient.builder().baseUrl(baseUrl).build();
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder();
     }
 
     @Bean
-    public RestClient catalogRestClient(@Value("${sellzon.services.catalog.base-url}") String baseUrl) {
-        return RestClient.builder().baseUrl(baseUrl).build();
+    public RestClient identityRestClient(
+            RestClient.Builder builder,
+            @Value("${sellzon.services.identity.base-url}") String baseUrl) {
+
+        return builder
+                .baseUrl(baseUrl)
+                .build();
     }
 
     @Bean
-    public RestClient cartRestClient(@Value("${sellzon.services.cart.base-url}") String baseUrl) {
-        return RestClient.builder().baseUrl(baseUrl).build();
+    public RestClient catalogRestClient(
+            RestClient.Builder builder,
+            @Value("${sellzon.services.catalog.base-url}") String baseUrl) {
+
+        return builder
+                .baseUrl(baseUrl)
+                .build();
+    }
+
+    @Bean
+    public RestClient cartRestClient(
+            RestClient.Builder builder,
+            @Value("${sellzon.services.cart.base-url}") String baseUrl) {
+
+        return builder
+                .baseUrl(baseUrl)
+                .build();
     }
 }

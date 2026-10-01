@@ -1,37 +1,38 @@
 const SellzonAPI = (() => {
-    /* =========================================================
-        * Sellzon Microservice URLs
-        *
-        * Frontend UI:
-        *   8080
-        *
-        * Backend services:
-        *   Identity  : 8081
-        *   Catalog   : 8082
-        *   Order     : 8083
-        *   Cart      : 8084
-        *   Inventory : 8085
-        *   Payment   : 8086
-       ========================================================= */
+
     const SERVICE_URLS = {
         identity: "http://localhost:8081",
         catalog: "http://localhost:8082",
-        cart: "http://localhost:8084"
+        order: "http://localhost:8083",
+        cart: "http://localhost:8084",
+        inventory: "http://localhost:8085",
+        payment: "http://localhost:8086"
     };
 
     function resolveUrl(url) {
-        if (!url || /^https?:\/\//i.test(url)) return url;
 
-        // Identity Service - authentication and users
+        if (!url || /^https?:\/\//i.test(url)) {
+            return url;
+        }
+
+        /* =====================================================
+           IDENTITY SERVICE - 8081
+           ===================================================== */
+
         if (
             url.startsWith("/api/auth/") ||
             url === "/api/users" ||
-            url.startsWith("/api/users/")
+            url.startsWith("/api/users/") ||
+            url.startsWith("/api/customer/addresses")
         ) {
             return `${SERVICE_URLS.identity}${url}`;
         }
 
-        // Catalog Service - customer catalog, seller catalog and admin catalog
+
+        /* =====================================================
+           CATALOG SERVICE - 8082
+           ===================================================== */
+
         if (
             url.startsWith("/api/products") ||
             url.startsWith("/api/categories/tree") ||
@@ -44,12 +45,54 @@ const SellzonAPI = (() => {
             return `${SERVICE_URLS.catalog}${url}`;
         }
 
-        // Cart Service
-        if (url.startsWith("/api/customer/cart")) {
+
+        /* =====================================================
+           ORDER SERVICE - 8083
+           ===================================================== */
+
+        if (
+            url.startsWith("/api/customer/checkout") ||
+            url.startsWith("/api/customer/orders") ||
+            url.startsWith("/api/seller/orders")
+        ) {
+            return `${SERVICE_URLS.order}${url}`;
+        }
+
+
+        /* =====================================================
+           CART SERVICE - 8084
+           ===================================================== */
+
+        if (
+            url.startsWith("/api/customer/cart")
+        ) {
             return `${SERVICE_URLS.cart}${url}`;
         }
 
-        // Other services will be moved one port at a time.
+
+        /* =====================================================
+           INVENTORY SERVICE - 8085
+           ===================================================== */
+
+        if (
+            url.startsWith("/api/seller/inventory") ||
+            url.startsWith("/api/internal/inventory")
+        ) {
+            return `${SERVICE_URLS.inventory}${url}`;
+        }
+
+
+        /* =====================================================
+           PAYMENT SERVICE - 8086
+           ===================================================== */
+
+        if (
+            url.startsWith("/api/customer/payments")
+        ) {
+            return `${SERVICE_URLS.payment}${url}`;
+        }
+
+
         return url;
     }
 

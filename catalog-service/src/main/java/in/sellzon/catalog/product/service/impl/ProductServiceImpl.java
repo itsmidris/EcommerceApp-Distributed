@@ -18,6 +18,8 @@ import in.sellzon.catalog.product.service.ProductService;
 import in.sellzon.catalog.product.util.MarketplaceProductIdGenerator;
 import in.sellzon.catalog.productattribute.dto.request.SaveProductAttributeValueRequestDTO;
 import in.sellzon.catalog.productattribute.service.ProductAttributeValueService;
+import in.sellzon.catalog.productimage.entity.ProductImage;
+import in.sellzon.catalog.productimage.repository.ProductImageRepository;
 import in.sellzon.catalog.security.CurrentUserService;
 import in.sellzon.catalog.identity.client.IdentityUserClient;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryAttributeRepository categoryAttributeRepository;
     private final ProductAttributeValueService productAttributeValueService;
     private final IdentityUserClient identityUserClient;
+    private final ProductImageRepository productImageRepository;
 
     @Override
     @Transactional
@@ -307,6 +310,18 @@ public class ProductServiceImpl implements ProductService {
 
         String sellerName = (seller.firstName() + " " + seller.lastName().trim());
 
+        String imageUrl = productImageRepository
+                .findByProductIdAndPrimaryImageTrue(product.getId())
+                .map(ProductImage::getImageUrl)
+                .orElseGet(() ->
+                        productImageRepository
+                                .findByProductIdOrderByDisplayOrderAsc(product.getId())
+                                .stream()
+                                .findFirst()
+                                .map(ProductImage::getImageUrl)
+                                .orElse(null)
+                );
+
         return new ProductResponseDTO(
                 product.getId(),
                 product.getMarketplaceProductId(),
@@ -321,7 +336,8 @@ public class ProductServiceImpl implements ProductService {
                 product.getMrp(),
                 product.getSellingPrice(),
                 product.getStockQuantity(),
-                product.getStatus()
+                product.getStatus(),
+                imageUrl
         );
     }
 }

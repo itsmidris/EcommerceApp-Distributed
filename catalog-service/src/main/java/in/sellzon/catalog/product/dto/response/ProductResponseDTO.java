@@ -20,6 +20,7 @@ public record ProductResponseDTO(
         BigDecimal mrp,
         BigDecimal sellingPrice,
         Integer stockQuantity,
-        Status status
+        Status status,
+        String imageUrl
 ) {
 }

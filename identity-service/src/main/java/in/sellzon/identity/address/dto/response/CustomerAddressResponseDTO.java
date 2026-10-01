@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record CustomerAddressResponseDTO(
         UUID id,
+        UUID customerId,
         String recipientName,
         String phoneNumber,
         String addressLine1,

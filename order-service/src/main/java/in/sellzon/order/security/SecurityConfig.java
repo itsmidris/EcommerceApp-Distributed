@@ -27,6 +27,7 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
@@ -34,6 +35,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/api/customer/checkout").hasRole("CUSTOMER")
                         .requestMatchers("/api/customer/orders/**").hasRole("CUSTOMER")
                         .requestMatchers("/api/seller/orders/**").hasRole("SELLER")
                         .anyRequest().authenticated()

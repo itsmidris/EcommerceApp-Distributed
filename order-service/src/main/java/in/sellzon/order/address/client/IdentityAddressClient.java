@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -18,7 +19,7 @@ public class IdentityAddressClient {
 
         AddressResponse address = identityRestClient
                 .get()
-                .uri("/api/addresses/{addressId}", addressId)
+                .uri("/api/customer/addresses/{addressId}", addressId)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .retrieve()
                 .body(AddressResponse.class);
@@ -36,5 +37,18 @@ public class IdentityAddressClient {
         }
 
         return address;
+    }
+
+    public List<AddressResponse> getMyAddresses(String accessToken) {
+
+        List<AddressResponse> addresses =
+                identityRestClient
+                        .get()
+                        .uri("/api/customer/addresses")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .retrieve()
+                        .body(new org.springframework.core.ParameterizedTypeReference<List<AddressResponse>>() {});
+
+        return addresses == null ? List.of() : addresses;
     }
 }

@@ -26,7 +26,9 @@ public class SecurityConfig {
 
         converter.setJwtGrantedAuthoritiesConverter(authorities);
 
-        http.csrf(csrf -> csrf.disable())
+        http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth

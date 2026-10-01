@@ -209,6 +209,7 @@ public class CustomerAddressServiceImpl implements CustomerAddressService {
 
         return new CustomerAddressResponseDTO(
                 a.getId(),
+                a.getCustomer().getId(),
                 a.getRecipientName(),
                 a.getPhoneNumber(),
                 a.getAddressLine1(),

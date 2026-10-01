@@ -176,7 +176,7 @@ public class CartServiceImpl implements CartService {
                 sellingPrice,
                 quantity,
                 safeStock(product.stockQuantity()),
-                null,
+                product.imageUrl(),
                 sellingPrice.multiply(BigDecimal.valueOf(quantity))
         );
     }
