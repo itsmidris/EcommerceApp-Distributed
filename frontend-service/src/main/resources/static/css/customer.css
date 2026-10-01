@@ -173,6 +173,12 @@ body {
     border-radius: .5rem;
 }
 
+.cart-image img {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+}
+
 .cart-product-info {
     min-width: 0;
     flex: 1 1 auto;

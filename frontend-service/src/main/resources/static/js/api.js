@@ -15,7 +15,8 @@ const SellzonAPI = (() => {
        ========================================================= */
     const SERVICE_URLS = {
         identity: "http://localhost:8081",
-        catalog: "http://localhost:8082"
+        catalog: "http://localhost:8082",
+        cart: "http://localhost:8084"
     };
 
     function resolveUrl(url) {
@@ -41,6 +42,11 @@ const SellzonAPI = (() => {
             url.startsWith("/api/seller/categories")
         ) {
             return `${SERVICE_URLS.catalog}${url}`;
+        }
+
+        // Cart Service
+        if (url.startsWith("/api/customer/cart")) {
+            return `${SERVICE_URLS.cart}${url}`;
         }
 
         // Other services will be moved one port at a time.

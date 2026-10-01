@@ -27,9 +27,24 @@ const CustomerStore = (() => {
     }
 
     function image(url, cls = "product-image", alt = "") {
-        return url
-            ? `<img class="${cls}" src="${esc(SellzonAPI.catalogAssetUrl(url))}" alt="${esc(alt)}" loading="lazy">`
-            : `<div class="product-placeholder"><i class="bi bi-image"></i></div>`;
+
+        if (!url) {
+            return `<div class="product-placeholder">
+                        <i class="bi bi-image"></i>
+                    </div>`;
+        }
+
+        const finalUrl =
+            url.startsWith("http://") || url.startsWith("https://")
+                ? url
+                : `http://localhost:8082${url}`;
+
+        return `<img
+                    class="${cls}"
+                    src="${esc(finalUrl)}"
+                    alt="${esc(alt)}"
+                    loading="lazy"
+                >`;
     }
 
     function loginFor(path) {

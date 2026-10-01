@@ -6,7 +6,54 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function load() {
         const { response, data } = await SellzonAPI.json('/api/customer/cart');
 
-        if (!response.ok) throw new Error(data?.message || 'Unable to load cart.');
+        if (!response.ok) {
+            throw new Error(data?.message || 'Unable to load cart.');
+        }
+
+        /*
+         * Cart service does not own product images.
+         * Fetch the product details from Catalog service and
+         * take the primary/first product image.
+         */
+        if (Array.isArray(data?.items) && data.items.length > 0) {
+
+            await Promise.all(
+                data.items.map(async (item) => {
+
+                    if (item.imageUrl) {
+                        return;
+                    }
+
+                    try {
+                        const productResult = await SellzonAPI.json(
+                            `/api/products/${encodeURIComponent(item.marketplaceProductId)}`
+                        );
+
+                        if (!productResult.response.ok || !productResult.data) {
+                            return;
+                        }
+
+                        const images = Array.isArray(productResult.data.images)
+                            ? productResult.data.images
+                            : [];
+
+                        const primaryImage =
+                            images.find(image => image.primaryImage) ||
+                            images[0];
+
+                        if (primaryImage?.imageUrl) {
+                            item.imageUrl = primaryImage.imageUrl;
+                        }
+
+                    } catch (error) {
+                        console.warn(
+                            `Unable to load image for ${item.marketplaceProductId}`,
+                            error
+                        );
+                    }
+                })
+            );
+        }
 
         CustomerStore.setCartCount(data.totalItems);
 
@@ -31,7 +78,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     <div class="cart-image d-flex align-items-center justify-content-center">
                                         ${
                                             i.imageUrl
-                                                ? `<img src="${CustomerStore.esc(SellzonAPI.catalogAssetUrl(i.imageUrl))}"
+                                                ? `<img src="${CustomerStore.esc(
+                                                        i.imageUrl.startsWith("http")
+                                                            ? i.imageUrl
+                                                            : "http://localhost:8082" + i.imageUrl
+                                                    )}"
                                                         alt="${CustomerStore.esc(i.title)}"
                                                         class="img-fluid rounded"
                                                         style="width: 90px; height: 90px; object-fit: contain;">`
