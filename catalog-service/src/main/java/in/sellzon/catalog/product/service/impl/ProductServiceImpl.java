@@ -9,6 +9,8 @@ import in.sellzon.catalog.common.enums.Status;
 import in.sellzon.catalog.common.exception.DuplicateResourceException;
 import in.sellzon.catalog.common.exception.ResourceNotFoundException;
 import in.sellzon.catalog.identity.response.IdentityUserResponse;
+import in.sellzon.catalog.kafka.event.ProductCreatedEvent;
+import in.sellzon.catalog.kafka.producer.ProductEventProducer;
 import in.sellzon.catalog.product.dto.request.CreateProductRequestDTO;
 import in.sellzon.catalog.product.dto.request.UpdateProductRequestDTO;
 import in.sellzon.catalog.product.dto.response.ProductResponseDTO;
@@ -42,6 +44,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductAttributeValueService productAttributeValueService;
     private final IdentityUserClient identityUserClient;
     private final ProductImageRepository productImageRepository;
+    private final ProductEventProducer productEventProducer;
 
     @Override
     @Transactional
@@ -72,10 +75,24 @@ public class ProductServiceImpl implements ProductService {
         product.setBrand(normalizeRequiredText(request.brand()));
         product.setMrp(request.mrp());
         product.setSellingPrice(request.sellingPrice());
-        product.setStockQuantity(request.stockQuantity());
+        product.setStockQuantity(0);
         product.setStatus(Status.ACTIVE);
 
         Product savedProduct = productRepository.save(product);
+
+        productEventProducer.publish(
+                new ProductCreatedEvent(
+                        UUID.randomUUID(),
+                        savedProduct.getId(),
+                        savedProduct.getMarketplaceProductId(),
+                        savedProduct.getSellerId(),
+                        savedProduct.getSku(),
+                        savedProduct.getTitle(),
+                        savedProduct.getBrand(),
+                        savedProduct.getStockQuantity(),
+                        savedProduct.getStatus().name()
+                )
+        );
 
         for (SaveProductAttributeValueRequestDTO attributeRequest
                 : request.attributes()) {
@@ -98,6 +115,44 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponseDTO getProduct(String marketplaceProductId) {
         Product product = getProductEntity(marketplaceProductId);
         return mapToResponse(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductResponseDTO getProductById(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+        return mapToResponse(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductResponseDTO getProductByIdInternal(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+        return mapToInternalResponse(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> getProductsBySellerId(UUID sellerId) {
+
+        return productRepository
+                .findBySellerIdOrderByCreatedAtDesc(sellerId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> getProductsBySellerIdInternal(UUID sellerId) {
+
+        return productRepository
+                .findBySellerIdOrderByCreatedAtDesc(sellerId)
+                .stream()
+                .map(this::mapToInternalResponse)
+                .toList();
     }
 
     @Override
@@ -125,11 +180,23 @@ public class ProductServiceImpl implements ProductService {
         product.setTitle(normalizeRequiredText(request.title()));
         product.setDescription(normalizeOptionalText(request.description()));
         product.setSellingPrice(request.sellingPrice());
-        product.setStockQuantity(request.stockQuantity());
 
         Product updatedProduct = productRepository.save(product);
 
         return mapToResponse(updatedProduct);
+    }
+
+    @Override
+    @Transactional
+    public void updateStockFromInventory(String marketplaceProductId, Integer stockQuantity) {
+        Product product = getProductEntity(marketplaceProductId);
+
+        if (stockQuantity == null || stockQuantity < 0) {
+            throw new IllegalArgumentException("Stock quantity cannot be negative");
+        }
+
+        product.setStockQuantity(stockQuantity);
+        productRepository.save(product);
     }
 
     @Override
@@ -310,17 +377,7 @@ public class ProductServiceImpl implements ProductService {
 
         String sellerName = (seller.firstName() + " " + seller.lastName().trim());
 
-        String imageUrl = productImageRepository
-                .findByProductIdAndPrimaryImageTrue(product.getId())
-                .map(ProductImage::getImageUrl)
-                .orElseGet(() ->
-                        productImageRepository
-                                .findByProductIdOrderByDisplayOrderAsc(product.getId())
-                                .stream()
-                                .findFirst()
-                                .map(ProductImage::getImageUrl)
-                                .orElse(null)
-                );
+        String imageUrl = getImageUrl(product.getId());
 
         return new ProductResponseDTO(
                 product.getId(),
@@ -339,5 +396,43 @@ public class ProductServiceImpl implements ProductService {
                 product.getStatus(),
                 imageUrl
         );
+    }
+
+    private ProductResponseDTO mapToInternalResponse(Product product) {
+
+        Category category = product.getCategory();
+
+        return new ProductResponseDTO(
+                product.getId(),
+                product.getMarketplaceProductId(),
+                product.getSellerId(),
+                null,
+                category.getId(),
+                category.getName(),
+                product.getSku(),
+                product.getTitle(),
+                product.getDescription(),
+                product.getBrand(),
+                product.getMrp(),
+                product.getSellingPrice(),
+                product.getStockQuantity(),
+                product.getStatus(),
+                getImageUrl(product.getId())
+        );
+    }
+
+    private String getImageUrl(UUID productId) {
+
+        return productImageRepository
+                .findByProductIdAndPrimaryImageTrue(productId)
+                .map(ProductImage::getImageUrl)
+                .orElseGet(() ->
+                        productImageRepository
+                                .findByProductIdOrderByDisplayOrderAsc(productId)
+                                .stream()
+                                .findFirst()
+                                .map(ProductImage::getImageUrl)
+                                .orElse(null)
+                );
     }
 }

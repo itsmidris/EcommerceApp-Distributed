@@ -199,10 +199,6 @@ function populateProduct(product) {
         product.sellingPrice ?? "";
 
 
-    document.getElementById(
-        "stockQuantity"
-    ).value =
-        product.stockQuantity ?? "";
 }
 
 
@@ -772,13 +768,6 @@ function validateBasicProduct() {
         );
 
 
-    const stockQuantity =
-        Number(
-            document.getElementById(
-                "stockQuantity"
-            ).value
-        );
-
 
     const mrp =
         Number(
@@ -822,18 +811,6 @@ function validateBasicProduct() {
         };
     }
 
-
-    if (
-        !Number.isInteger(stockQuantity) ||
-        stockQuantity < 0
-    ) {
-
-        return {
-            valid: false,
-            message:
-                "Stock quantity must be a whole number greater than or equal to 0."
-        };
-    }
 
 
     return {
@@ -976,7 +953,7 @@ async function handleSubmit(event) {
          * title
          * description
          * sellingPrice
-         * stockQuantity
+         * Stock is managed by Inventory Service.
          */
 
         const {
@@ -1006,15 +983,6 @@ async function handleSubmit(event) {
                             document
                                 .getElementById(
                                     "sellingPrice"
-                                )
-                                .value
-                        ),
-
-                    stockQuantity:
-                        Number(
-                            document
-                                .getElementById(
-                                    "stockQuantity"
                                 )
                                 .value
                         )

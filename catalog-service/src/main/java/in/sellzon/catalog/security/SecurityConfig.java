@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
+import org.springframework.security.oauth2.server.resource.authentication.DelegatingJwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
@@ -40,6 +41,12 @@ public class SecurityConfig {
                                 "/api/products/**",
                                 "/api/categories/tree"
                         ).permitAll()
+                        // Inventory service -> Catalog service
+                        .requestMatchers(
+                                "/api/internal/products/by-id/**",
+                                "/api/internal/products/*/stock",
+                                "/api/internal/products/seller/*"
+                                ).hasAuthority("SCOPE_catalog.internal")
                         // Seller APIs
                         .requestMatchers("/api/seller/**")
                         .hasRole("SELLER")
@@ -65,11 +72,16 @@ public class SecurityConfig {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
 
-        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        JwtGrantedAuthoritiesConverter scopesConverter = new JwtGrantedAuthoritiesConverter();
 
-        authoritiesConverter.setAuthoritiesClaimName("roles");
+        JwtGrantedAuthoritiesConverter rolesConverter = new JwtGrantedAuthoritiesConverter();
 
-        authoritiesConverter.setAuthorityPrefix("ROLE_");
+
+        rolesConverter.setAuthoritiesClaimName("roles");
+        rolesConverter.setAuthorityPrefix("ROLE_");
+
+        DelegatingJwtGrantedAuthoritiesConverter authoritiesConverter =
+                new DelegatingJwtGrantedAuthoritiesConverter(scopesConverter, rolesConverter);
 
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
 

@@ -22,33 +22,130 @@ async function loadProducts() {
 
     try {
 
-        const { response, data } = await SellzonAPI.json(
-            "/api/seller/products",
-            {
-                method: "GET"
-            }
-        );
+        /*
+         * Load product information from Catalog
+         * and current inventory from Inventory.
+         *
+         * Catalog = product metadata
+         * Inventory = stock source of truth
+         */
+        const [productsResult, inventoryResult] =
+            await Promise.all([
 
-        if (!response.ok) {
+                SellzonAPI.json(
+                    `/api/seller/products?_=${Date.now()}`,
+                    {
+                        method: "GET",
+                        cache: "no-store"
+                    }
+                ),
+
+                SellzonAPI.json(
+                    `/api/seller/inventory?_=${Date.now()}`,
+                    {
+                        method: "GET",
+                        cache: "no-store"
+                    }
+                )
+            ]);
+
+
+        /*
+         * Validate Catalog response
+         */
+        if (!productsResult.response.ok) {
+
             throw new Error(
-                data?.message || "Unable to load products."
+                productsResult.data?.message ||
+                "Unable to load products."
             );
         }
 
-        products = Array.isArray(data) ? data : [];
+
+        /*
+         * Validate Inventory response
+         */
+        if (!inventoryResult.response.ok) {
+
+            throw new Error(
+                inventoryResult.data?.message ||
+                "Unable to load inventory."
+            );
+        }
+
+
+        const catalogProducts =
+            Array.isArray(productsResult.data)
+                ? productsResult.data
+                : [];
+
+
+        const inventoryProducts =
+            Array.isArray(inventoryResult.data)
+                ? inventoryResult.data
+                : [];
+
+
+        /*
+         * Build inventory lookup:
+         *
+         * marketplaceProductId -> inventory record
+         */
+        const inventoryMap = new Map();
+
+        inventoryProducts.forEach(inventory => {
+
+            if (!inventory.marketplaceProductId) {
+                return;
+            }
+
+            inventoryMap.set(
+                inventory.marketplaceProductId,
+                inventory
+            );
+        });
+
+
+        /*
+         * Merge Inventory stock into Catalog products.
+         *
+         * IMPORTANT:
+         * stockQuantity now comes ONLY from Inventory.
+         */
+        products = catalogProducts.map(product => {
+
+            const inventory =
+                inventoryMap.get(
+                    product.marketplaceProductId
+                );
+
+
+            return {
+                ...product,
+
+                stockQuantity:
+                    inventory?.stockQuantity ?? 0
+            };
+        });
+
 
         updateStats();
         renderProducts();
 
     } catch (error) {
 
-        console.error("Unable to load products:", error);
+        console.error(
+            "Unable to load products:",
+            error
+        );
 
         tbody.innerHTML = `
             <tr>
                 <td colspan="7"
                     class="text-center py-5 text-danger">
+
                     ${escapeHtml(error.message)}
+
                 </td>
             </tr>
         `;

@@ -17,6 +17,8 @@ public interface InventoryReservationRepository extends JpaRepository<InventoryR
     @Query("select coalesce(sum(r.quantity),0) from InventoryReservation r where r.productId=:productId and r.status=:status")
     Long sumQuantityByProductIdAndStatus(@Param("productId") UUID productId, @Param("status") InventoryReservationStatus status);
     Optional<InventoryReservation> findByOrderIdAndProductId(UUID orderId, UUID productId);
+    List<InventoryReservation> findByOrderIdOrderByProductIdAsc(UUID orderId);
+    List<InventoryReservation> findByOrderIdAndStatusOrderByProductIdAsc(UUID orderId, InventoryReservationStatus status);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from InventoryReservation r where r.id=:id")
     Optional<InventoryReservation> findByIdForUpdate(@Param("id") UUID id);

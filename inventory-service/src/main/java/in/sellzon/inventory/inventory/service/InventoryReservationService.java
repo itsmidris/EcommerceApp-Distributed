@@ -10,5 +10,7 @@ public interface InventoryReservationService {
     InventoryReservationResponseDTO reserve(InventoryReservationRequestDTO request);
     InventoryReservationResponseDTO release(UUID reservationId);
     InventoryReservationResponseDTO commit(UUID reservationId);
+    void commitOrder(UUID orderId);
+    void releaseOrder(UUID orderId);
     InventoryAvailabilityResponseDTO getAvailability(UUID productId);
 }

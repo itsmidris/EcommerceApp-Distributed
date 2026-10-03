@@ -609,7 +609,6 @@ async function createProduct(e) {
                     brand,
                     mrp: Number(mrp),
                     sellingPrice: Number(sellingPrice),
-                    stockQuantity: Number(stockQuantity),
                     attributes: attributeValues
                 })
             }
@@ -621,6 +620,28 @@ async function createProduct(e) {
             throw new Error(
                 data?.message ||
                 "Unable to create product."
+            );
+        }
+
+        // Inventory Service is the source of truth for stock.
+        // Catalog is created with stock = 0 and stock is initialized here.
+        const inventoryResult = await SellzonAPI.json(
+            `/api/seller/inventory/${encodeURIComponent(data.marketplaceProductId)}`,
+            {
+                method: "PATCH",
+                body: JSON.stringify({
+                    operation: "SET",
+                    quantity: Number(stockQuantity),
+                    type: "RESTOCK",
+                    reason: "Initial inventory"
+                })
+            }
+        );
+
+        if (!inventoryResult.response.ok) {
+            throw new Error(
+                inventoryResult.data?.message ||
+                "Product was created, but inventory initialization failed. The product remains out of stock."
             );
         }
 

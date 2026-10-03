@@ -121,6 +121,13 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         if (payment.getStatus() == PaymentRecordStatus.SUCCESS) {
+            // Re-send the order callback so inventory commit remains idempotent after a retry.
+            orderClient.markPaid(
+                    request.orderId(),
+                    payment.getRazorpayPaymentId(),
+                    accessToken
+            );
+
             return new VerifyPaymentResponse(
                     payment.getId(),
                     payment.getOrderId(),

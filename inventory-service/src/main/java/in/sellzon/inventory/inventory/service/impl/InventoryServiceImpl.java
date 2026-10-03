@@ -19,6 +19,8 @@ import in.sellzon.inventory.inventory.repository.InventoryItemRepository;
 import in.sellzon.inventory.inventory.repository.InventoryReservationRepository;
 import in.sellzon.inventory.inventory.repository.InventorySettingsRepository;
 import in.sellzon.inventory.inventory.service.InventoryService;
+import in.sellzon.inventory.kafka.event.InventoryStockChangedEvent;
+import in.sellzon.inventory.kafka.producer.InventoryStockEventProducer;
 import in.sellzon.inventory.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,21 +41,13 @@ public class InventoryServiceImpl implements InventoryService {
     private final CurrentUserService currentUserService;
     private final CatalogClient catalogClient;
     private final InventoryReservationRepository reservationRepository;
+    private final InventoryStockEventProducer inventoryStockEventProducer;
 
     @Override
     @Transactional(readOnly = true)
     public List<InventoryProductResponseDTO> getMyInventory() {
 
         UUID sellerId = currentUserService.getCurrentUserId();
-
-        catalogClient.getMyProducts(currentUserService.getAccessToken())
-                .stream()
-                .filter(p -> sellerId.equals(p.sellerId()))
-                .forEach(p -> {
-                    InventoryItem item = itemRepository.findByProductId(p.id()).orElse(null);
-                    if (item == null) createFromCatalog(p);
-                    else refreshCatalogSnapshot(item, p);
-                });
 
         return itemRepository
                 .findBySellerIdOrderByUpdatedAtDesc(sellerId)
@@ -99,6 +93,15 @@ public class InventoryServiceImpl implements InventoryService {
         item.setStockQuantity(next);
 
         itemRepository.save(item);
+
+        inventoryStockEventProducer.publish(
+                new InventoryStockChangedEvent(
+                        UUID.randomUUID(),
+                        item.getProductId(),
+                        item.getMarketplaceProductId(),
+                        item.getStockQuantity()
+                )
+        );
 
         saveAdjustment(item, change, previous, next, request.type(), normalizeReason(request.reason()));
 

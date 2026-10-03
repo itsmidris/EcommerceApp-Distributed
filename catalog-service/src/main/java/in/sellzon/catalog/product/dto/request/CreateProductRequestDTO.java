@@ -36,10 +36,6 @@ public record CreateProductRequestDTO(
         @DecimalMin(value = "0.01", message = "Selling price must be greater than 0")
         BigDecimal sellingPrice,
 
-        @NotNull(message = "Stock quantity is required")
-        @Min(value = 0, message = "Stock quantity cannot be negative")
-        Integer stockQuantity,
-
         @NotNull(message = "Category attributes are required")
         @Valid
         List<@Valid SaveProductAttributeValueRequestDTO> attributes
