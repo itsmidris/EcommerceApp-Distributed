@@ -23,6 +23,9 @@ import in.sellzon.order.order.enums.SellerOrderStatus;
 import in.sellzon.order.order.repository.OrderRepository;
 import in.sellzon.order.order.repository.SellerOrderRepository;
 import in.sellzon.order.order.service.OrderService;
+import in.sellzon.order.kafka.event.OrderItemReservation;
+import in.sellzon.order.kafka.event.OrderLifecycleEvent;
+import in.sellzon.order.kafka.producer.OrderEventProducer;
 import in.sellzon.order.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,6 +46,7 @@ public class OrderServiceImpl implements OrderService {
     private final IdentityAddressClient identityAddressClient;
     private final CatalogClient catalogClient;
     private final CartClient cartClient;
+    private final OrderEventProducer orderEventProducer;
 
     @Override
     @Transactional
@@ -140,6 +144,15 @@ public class OrderServiceImpl implements OrderService {
 
         Order saved = orderRepository.save(order);
 
+        orderEventProducer.orderPlaced(
+                OrderLifecycleEvent.orderPlaced(
+                        saved.getId(),
+                        saved.getItems().stream()
+                                .map(item -> new OrderItemReservation(item.getProductId(), item.getQuantity()))
+                                .toList()
+                )
+        );
+
         clearCartAfterCommit(accessToken);
 
         return map(saved);
@@ -213,8 +226,15 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("Unsupported payment status update");
         }
 
+        PaymentStatus previousStatus = order.getPaymentStatus();
         order.setPaymentStatus(paymentStatus);
         orderRepository.save(order);
+
+        if (previousStatus != PaymentStatus.FAILED && paymentStatus == PaymentStatus.FAILED) {
+            orderEventProducer.paymentFailed(
+                    OrderLifecycleEvent.paymentFailed(order.getId())
+            );
+        }
     }
 
     private OrderResponseDTO map(Order order) {

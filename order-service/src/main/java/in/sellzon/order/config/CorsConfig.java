@@ -19,7 +19,9 @@ public class CorsConfig {
 
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:8080",
-                "http://127.0.0.1:8080"
+                "http://127.0.0.1:8080",
+                "http://partner.localhost:8080"
+                
         ));
 
         configuration.setAllowedMethods(List.of(

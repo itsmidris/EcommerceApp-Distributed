@@ -17,6 +17,8 @@ import in.sellzon.order.order.repository.OrderItemRepository;
 import in.sellzon.order.order.repository.OrderRepository;
 import in.sellzon.order.order.repository.SellerOrderRepository;
 import in.sellzon.order.order.service.SellerOrderService;
+import in.sellzon.order.kafka.event.OrderLifecycleEvent;
+import in.sellzon.order.kafka.producer.OrderEventProducer;
 import in.sellzon.order.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class SellerOrderServiceImpl implements SellerOrderService {
     private final OrderRepository orderRepository;
     private final CurrentUserService currentUserService;
     private final IdentityUserClient identityUserClient;
+    private final OrderEventProducer orderEventProducer;
 
     @Override
     @Transactional(readOnly = true)
@@ -95,8 +98,31 @@ public class SellerOrderServiceImpl implements SellerOrderService {
         sellerOrderRepository.save(sellerOrder);
 
         Order order = sellerOrder.getOrder();
+        OrderStatus previousOrderStatus = order.getOrderStatus();
         recalculateCustomerOrderStatus(order);
         orderRepository.save(order);
+
+        if (previousOrderStatus != OrderStatus.CANCELLED
+                && order.getOrderStatus() == OrderStatus.CANCELLED) {
+            orderEventProducer.orderCancelled(
+                    OrderLifecycleEvent.orderCancelled(order.getId())
+            );
+        }
+
+        // Inventory is finalized per seller shipment. This must be emitted for
+        // every seller order that reaches SHIPPED, not only the first one that
+        // causes the aggregate customer order to become SHIPPED.
+        if (newStatus == SellerOrderStatus.SHIPPED) {
+            orderEventProducer.orderShipped(
+                    OrderLifecycleEvent.orderShipped(
+                            order.getId(),
+                            sellerOrder.getId(),
+                            sellerOrder.getItems().stream()
+                                    .map(item -> item.getProductId())
+                                    .toList()
+                    )
+            );
+        }
 
         return map(sellerOrder, currentUserService.getCurrentAccessToken());
     }
