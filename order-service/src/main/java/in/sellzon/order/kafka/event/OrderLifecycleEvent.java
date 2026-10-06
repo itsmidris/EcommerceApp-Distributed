@@ -8,8 +8,7 @@ public record OrderLifecycleEvent(
         EventType eventType,
         UUID orderId,
         List<OrderItemReservation> items,
-        UUID sellerOrderId,
-        List<UUID> productIds
+        UUID sellerOrderId
 ) {
     public enum EventType {
         ORDER_PLACED,
@@ -19,18 +18,18 @@ public record OrderLifecycleEvent(
     }
 
     public static OrderLifecycleEvent orderPlaced(UUID orderId, List<OrderItemReservation> items) {
-        return new OrderLifecycleEvent(UUID.randomUUID(), EventType.ORDER_PLACED, orderId, items, null, null);
+        return new OrderLifecycleEvent(UUID.randomUUID(), EventType.ORDER_PLACED, orderId, items, null);
     }
 
     public static OrderLifecycleEvent paymentFailed(UUID orderId) {
-        return new OrderLifecycleEvent(UUID.randomUUID(), EventType.PAYMENT_FAILED, orderId, null, null, null);
+        return new OrderLifecycleEvent(UUID.randomUUID(), EventType.PAYMENT_FAILED, orderId, null, null);
     }
 
     public static OrderLifecycleEvent orderCancelled(UUID orderId) {
-        return new OrderLifecycleEvent(UUID.randomUUID(), EventType.ORDER_CANCELLED, orderId, null, null, null);
+        return new OrderLifecycleEvent(UUID.randomUUID(), EventType.ORDER_CANCELLED, orderId, null, null);
     }
 
-    public static OrderLifecycleEvent orderShipped(UUID orderId, UUID sellerOrderId, List<UUID> productIds) {
-        return new OrderLifecycleEvent(UUID.randomUUID(), EventType.ORDER_SHIPPED, orderId, null, sellerOrderId, productIds);
+    public static OrderLifecycleEvent orderShipped(UUID orderId, UUID sellerOrderId, List<OrderItemReservation> items) {
+        return new OrderLifecycleEvent(UUID.randomUUID(), EventType.ORDER_SHIPPED, orderId, items, sellerOrderId);
     }
 }

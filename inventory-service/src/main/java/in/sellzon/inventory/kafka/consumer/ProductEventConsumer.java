@@ -45,16 +45,18 @@ public class ProductEventConsumer {
         item.setSku(event.sku());
         item.setTitle(event.title());
         item.setBrand(event.brand());
-        item.setStockQuantity(event.initialStock() == null ? 0 : event.initialStock());
+        item.setAvailableQuantity(event.initialStock() == null ? 0 : event.initialStock());
+        item.setBlockedQuantity(0);
         item.setStatus(event.status() == null ? "ACTIVE" : event.status());
         item.setLowStockThreshold(DEFAULT_LOW_STOCK_THRESHOLD);
 
         inventoryItemRepository.save(item);
 
         log.info(
-                "Inventory created for product {} with stock {}",
+                "Inventory created for product {} with available quantity {} and blocked quantity {}",
                 event.marketplaceProductId(),
-                item.getStockQuantity()
+                item.getAvailableQuantity(),
+                item.getBlockedQuantity()
         );
     }
 }

@@ -124,7 +124,13 @@ async function loadProducts() {
                 ...product,
 
                 stockQuantity:
-                    inventory?.stockQuantity ?? 0
+                    inventory?.availableQuantity ?? 0,
+
+                availableQuantity:
+                    inventory?.availableQuantity ?? 0,
+
+                blockedQuantity:
+                    inventory?.blockedQuantity ?? 0
             };
         });
 

@@ -68,14 +68,14 @@ async function loadInventory() {
 function updateStats() {
     document.getElementById("totalProducts").textContent = inventory.length;
 
-    document.getElementById("inStockProducts").textContent =
-        inventory.filter(x => x.stockQuantity > 0 && !x.lowStock).length;
+        document.getElementById("inStockProducts").textContent =
+            inventory.filter(x => x.availableQuantity > 0 && !x.lowStock).length;
 
-    document.getElementById("lowStockProducts").textContent =
-        inventory.filter(x => x.lowStock).length;
+        document.getElementById("lowStockProducts").textContent =
+            inventory.filter(x => x.lowStock).length;
 
-    document.getElementById("outOfStockProducts").textContent =
-        inventory.filter(x => x.outOfStock).length;
+        document.getElementById("outOfStockProducts").textContent =
+            inventory.filter(x => x.outOfStock).length;
 }
 
 
@@ -100,7 +100,7 @@ function renderInventory() {
 
         const f =
             filter === "ALL" ||
-            (filter === "IN_STOCK" && x.stockQuantity > 0 && !x.lowStock) ||
+            (filter === "IN_STOCK" && x.availableQuantity > 0 && !x.lowStock) ||
             (filter === "LOW" && x.lowStock) ||
             (filter === "OUT" && x.outOfStock);
 
@@ -127,7 +127,13 @@ function renderInventory() {
             </td>
 
             <td>
-                <span class="fw-semibold">${x.stockQuantity}</span>
+                <div class="fw-semibold">${x.availableQuantity}</div>
+                <div class="small text-secondary">Available</div>
+            </td>
+
+            <td>
+                <div class="fw-semibold">${x.blockedQuantity}</div>
+                <div class="small text-secondary">Blocked</div>
             </td>
 
             <td>${x.lowStockThreshold}</td>
@@ -160,7 +166,8 @@ function openInventory(id) {
     selectedProductId = id;
 
     document.getElementById("inventoryModalProduct").textContent = `${p.title} · ${p.sku}`;
-    document.getElementById("currentStock").textContent = p.stockQuantity;
+    document.getElementById("currentAvailable").textContent = p.availableQuantity;
+    document.getElementById("currentBlocked").textContent = p.blockedQuantity;
     document.getElementById("currentThreshold").textContent = p.lowStockThreshold;
     document.getElementById("inventoryThreshold").value = p.lowStockThreshold;
 
@@ -547,8 +554,10 @@ async function saveThreshold() {
         if (i >= 0) {
             inventory[i].lowStockThreshold = data.lowStockThreshold;
             inventory[i].lowStock =
-                inventory[i].stockQuantity > 0 &&
-                inventory[i].stockQuantity <= data.lowStockThreshold;
+                inventory[i].availableQuantity > 0 &&
+                inventory[i].availableQuantity <= data.lowStockThreshold;
+            inventory[i].outOfStock =
+                inventory[i].availableQuantity === 0;
         }
 
         updateStats();

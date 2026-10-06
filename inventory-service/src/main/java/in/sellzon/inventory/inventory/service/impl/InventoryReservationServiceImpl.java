@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -55,24 +56,40 @@ public class InventoryReservationServiceImpl implements InventoryReservationServ
             // A released/expired reservation can be reused when the customer retries payment.
             if (existing.getStatus() == InventoryReservationStatus.ACTIVE
                     && !existing.getExpiresAt().isAfter(now)) {
+
+                InventoryItem oldItem = itemRepository
+                        .findByProductIdForUpdate(existing.getProductId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+
+                oldItem.setBlockedQuantity(oldItem.getBlockedQuantity() - existing.getQuantity());
+
+                oldItem.setAvailableQuantity(oldItem.getAvailableQuantity() + existing.getQuantity());
+
                 existing.setStatus(InventoryReservationStatus.EXPIRED);
+
+                itemRepository.save(oldItem);
+                reservationRepository.save(existing);
+
+                publishAvailability(oldItem);
             }
         }
 
         InventoryItem item = itemRepository
                 .findByProductIdForUpdate(request.productId())
                 .orElseGet(() -> {
-                    CatalogProductResponse catalog = catalogClient.getProductById(
-                            request.productId()
-                    );
+                    CatalogProductResponse catalog = catalogClient.getProductById(request.productId());
                     return createInventoryFromCatalog(catalog);
                 });
 
         if (!"ACTIVE".equalsIgnoreCase(item.getStatus())) throw new BusinessException("Product inventory is not active");
 
-        int reserved = getReservedQuantity(item.getProductId());
-        int available = item.getStockQuantity() - reserved;
-        if (request.quantity() > available) throw new BusinessException("Only " + Math.max(available, 0) + " units are available");
+        if (request.quantity() <= 0) {
+            throw new BusinessException("Reservation quantity must be greater than 0");
+        }
+
+        if (request.quantity() > item.getAvailableQuantity()) {
+            throw new BusinessException("Only " + item.getAvailableQuantity() + " units are available");
+        }
 
         InventoryReservation reservation = existing != null ? existing : new InventoryReservation();
 
@@ -84,7 +101,16 @@ public class InventoryReservationServiceImpl implements InventoryReservationServ
         reservation.setStatus(InventoryReservationStatus.ACTIVE);
         reservation.setExpiresAt(LocalDateTime.now().plusSeconds(request.effectiveTtlSeconds()));
 
-        return map(reservationRepository.save(reservation));
+        item.setAvailableQuantity(item.getAvailableQuantity() - request.quantity());
+        item.setBlockedQuantity(item.getBlockedQuantity() + request.quantity());
+
+        itemRepository.save(item);
+
+        InventoryReservation saved = reservationRepository.save(reservation);
+
+        publishAvailability(item);
+
+        return map(saved);
     }
 
     @Override
@@ -95,7 +121,23 @@ public class InventoryReservationServiceImpl implements InventoryReservationServ
                 .findByIdForUpdate(reservationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory reservation not found"));
 
-        if (reservation.getStatus() == InventoryReservationStatus.ACTIVE) reservation.setStatus(InventoryReservationStatus.RELEASED);
+        if (reservation.getStatus() == InventoryReservationStatus.ACTIVE) {
+
+            InventoryItem item = itemRepository
+                            .findByProductIdForUpdate(reservation.getProductId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+
+            item.setBlockedQuantity(item.getBlockedQuantity() - reservation.getQuantity());
+
+            item.setAvailableQuantity(item.getAvailableQuantity() + reservation.getQuantity());
+
+            reservation.setStatus(InventoryReservationStatus.RELEASED);
+
+            itemRepository.save(item);
+            reservationRepository.save(reservation);
+
+            publishAvailability(item);
+        }
 
         return map(reservation);
     }
@@ -110,8 +152,24 @@ public class InventoryReservationServiceImpl implements InventoryReservationServ
 
         if (reservation.getStatus() == InventoryReservationStatus.COMMITTED) return map(reservation);
 
-        if (reservation.getStatus() == InventoryReservationStatus.ACTIVE && !reservation.getExpiresAt().isAfter(LocalDateTime.now())) {
+        if (reservation.getStatus() == InventoryReservationStatus.ACTIVE &&
+                !reservation.getExpiresAt().isAfter(LocalDateTime.now())) {
+
+            InventoryItem item = itemRepository
+                            .findByProductIdForUpdate(reservation.getProductId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+
+            item.setBlockedQuantity(item.getBlockedQuantity() - reservation.getQuantity());
+
+            item.setAvailableQuantity(item.getAvailableQuantity() + reservation.getQuantity());
+
             reservation.setStatus(InventoryReservationStatus.EXPIRED);
+
+            itemRepository.save(item);
+            reservationRepository.save(reservation);
+
+            publishAvailability(item);
+
             throw new BusinessException("Inventory reservation has expired");
         }
 
@@ -121,32 +179,30 @@ public class InventoryReservationServiceImpl implements InventoryReservationServ
                 .findByProductIdForUpdate(reservation.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
 
-        if (reservation.getQuantity() > item.getStockQuantity()) throw new BusinessException("Insufficient stock while committing reservation");
+        if (reservation.getQuantity() > item.getBlockedQuantity()) {
+            throw new BusinessException("Blocked inventory is insufficient");
+        }
 
-        int previousStock = item.getStockQuantity();
+        int previousTotal = item.getAvailableQuantity() + item.getBlockedQuantity();
 
-        item.setStockQuantity(previousStock - reservation.getQuantity());
+        item.setBlockedQuantity(item.getBlockedQuantity() - reservation.getQuantity());
+
+        reservation.setStatus(InventoryReservationStatus.COMMITTED);
 
         itemRepository.save(item);
+        reservationRepository.save(reservation);
 
-        inventoryStockEventProducer.publish(
-                new InventoryStockChangedEvent(
-                        UUID.randomUUID(),
-                        item.getProductId(),
-                        item.getMarketplaceProductId(),
-                        item.getStockQuantity()
-                )
-        );
+        int newTotal = item.getAvailableQuantity() + item.getBlockedQuantity();
 
         inventorySystemService.recordMovement(
                 item,
-                previousStock,
-                item.getStockQuantity(),
+                previousTotal,
+                newTotal,
                 InventoryAdjustmentType.ORDER,
                 "Order inventory committed: " + reservation.getOrderId()
         );
 
-        reservation.setStatus(InventoryReservationStatus.COMMITTED);
+        publishAvailability(item);
 
         return map(reservation);
     }
@@ -156,66 +212,39 @@ public class InventoryReservationServiceImpl implements InventoryReservationServ
     @Transactional
     public void commitOrder(UUID orderId) {
 
-        var reservations = reservationRepository
-                .findByOrderIdOrderByProductIdAsc(orderId);
+        List<InventoryReservation> reservations = reservationRepository.findByOrderIdOrderByProductIdAsc(orderId);
 
-        if (reservations.isEmpty()) {
-            return;
-        }
-
-        boolean hasReleasedOrExpired = reservations.stream()
-                .anyMatch(r -> r.getStatus() == InventoryReservationStatus.RELEASED
-                        || r.getStatus() == InventoryReservationStatus.EXPIRED);
-
-        if (hasReleasedOrExpired) {
-            throw new BusinessException("Inventory reservation is no longer available for order: " + orderId);
-        }
-
-        if (reservations.stream().allMatch(r -> r.getStatus() == InventoryReservationStatus.COMMITTED)) {
-            return;
-        }
-
-        LocalDateTime now = LocalDateTime.now();
+        if (reservations.isEmpty()) {return;}
 
         for (InventoryReservation reservation : reservations) {
+            if (reservation.getStatus()
+                    == InventoryReservationStatus.COMMITTED) {
+                continue;
+            }
+            commit(reservation.getId());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void commitProducts(UUID orderId, List<UUID> productIds) {
+
+        if (productIds == null || productIds.isEmpty()) {
+            return;
+        }
+
+        for (UUID productId : productIds) {
+            InventoryReservation reservation = reservationRepository
+                    .findByOrderIdAndProductId(orderId, productId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Inventory reservation not found for order " + orderId + " and product " + productId
+                    ));
+
             if (reservation.getStatus() == InventoryReservationStatus.COMMITTED) {
                 continue;
             }
-            if (!reservation.getExpiresAt().isAfter(now)) {
-                reservation.setStatus(InventoryReservationStatus.EXPIRED);
-                throw new BusinessException("Inventory reservation has expired for product: " + reservation.getMarketplaceProductId());
-            }
 
-            InventoryItem item = itemRepository
-                    .findByProductIdForUpdate(reservation.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Inventory not found for product: " + reservation.getProductId()));
-
-            if (reservation.getQuantity() > item.getStockQuantity()) {
-                throw new BusinessException("Insufficient stock while committing order: " + orderId);
-            }
-
-            int previousStock = item.getStockQuantity();
-            item.setStockQuantity(previousStock - reservation.getQuantity());
-            itemRepository.save(item);
-
-            inventoryStockEventProducer.publish(
-                    new InventoryStockChangedEvent(
-                            UUID.randomUUID(),
-                            item.getProductId(),
-                            item.getMarketplaceProductId(),
-                            item.getStockQuantity()
-                    )
-            );
-
-            inventorySystemService.recordMovement(
-                    item,
-                    previousStock,
-                    item.getStockQuantity(),
-                    InventoryAdjustmentType.ORDER,
-                    "Order inventory committed: " + orderId
-            );
-
-            reservation.setStatus(InventoryReservationStatus.COMMITTED);
+            commit(reservation.getId());
         }
     }
 
@@ -223,9 +252,26 @@ public class InventoryReservationServiceImpl implements InventoryReservationServ
     @Transactional
     public void releaseOrder(UUID orderId) {
 
-        reservationRepository
-                .findByOrderIdAndStatusOrderByProductIdAsc(orderId, InventoryReservationStatus.ACTIVE)
-                .forEach(reservation -> reservation.setStatus(InventoryReservationStatus.RELEASED));
+        List<InventoryReservation> reservations =
+                reservationRepository.findByOrderIdAndStatusOrderByProductIdAsc(orderId, InventoryReservationStatus.ACTIVE);
+
+        for (InventoryReservation reservation : reservations) {
+
+            InventoryItem item = itemRepository
+                            .findByProductIdForUpdate(reservation.getProductId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+
+            item.setBlockedQuantity(item.getBlockedQuantity() - reservation.getQuantity());
+
+            item.setAvailableQuantity(item.getAvailableQuantity() + reservation.getQuantity());
+
+            reservation.setStatus(InventoryReservationStatus.RELEASED);
+
+            itemRepository.save(item);
+            reservationRepository.save(reservation);
+
+            publishAvailability(item);
+        }
     }
 
     @Override
@@ -236,15 +282,43 @@ public class InventoryReservationServiceImpl implements InventoryReservationServ
                 .findByProductId(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory not found for product: " + productId));
 
-        int reserved = getReservedQuantity(productId);
-
         return new InventoryAvailabilityResponseDTO(
                 productId,
                 item.getMarketplaceProductId(),
-                item.getStockQuantity(),
-                reserved,
-                Math.max(0, item.getStockQuantity() - reserved)
+                item.getAvailableQuantity(),
+                item.getBlockedQuantity()
         );
+    }
+
+    @Override
+    @Transactional
+    public void expireReservations() {
+
+        List<InventoryReservation> reservations =
+                reservationRepository
+                        .findTop100ByStatusAndExpiresAtLessThanEqualOrderByExpiresAtAsc(
+                                InventoryReservationStatus.ACTIVE,
+                                LocalDateTime.now()
+                        );
+
+        for (InventoryReservation reservation : reservations) {
+
+            InventoryItem item =
+                    itemRepository
+                            .findByProductIdForUpdate(reservation.getProductId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+
+            item.setBlockedQuantity(item.getBlockedQuantity() - reservation.getQuantity());
+
+            item.setAvailableQuantity(item.getAvailableQuantity() + reservation.getQuantity());
+
+            reservation.setStatus(InventoryReservationStatus.EXPIRED);
+
+            itemRepository.save(item);
+            reservationRepository.save(reservation);
+
+            publishAvailability(item);
+        }
     }
 
 
@@ -256,17 +330,23 @@ public class InventoryReservationServiceImpl implements InventoryReservationServ
         item.setSku(p.sku());
         item.setTitle(p.title());
         item.setBrand(p.brand());
-        item.setStockQuantity(p.stockQuantity() == null ? 0 : p.stockQuantity());
+        item.setAvailableQuantity(p.stockQuantity() == null ? 0 : p.stockQuantity());
+        item.setBlockedQuantity(0);
         item.setLowStockThreshold(5);
         item.setStatus(p.status() == null ? "ACTIVE" : p.status());
         return itemRepository.save(item);
     }
 
-    private int getReservedQuantity(UUID productId) {
+    private void publishAvailability(InventoryItem item) {
 
-        Long value = reservationRepository.sumQuantityByProductIdAndStatus(productId, InventoryReservationStatus.ACTIVE);
-
-        return value == null ? 0 : Math.toIntExact(value);
+        inventoryStockEventProducer.publish(
+                new InventoryStockChangedEvent(
+                        UUID.randomUUID(),
+                        item.getProductId(),
+                        item.getMarketplaceProductId(),
+                        item.getAvailableQuantity()
+                )
+        );
     }
 
     private InventoryReservationResponseDTO map(InventoryReservation r) {

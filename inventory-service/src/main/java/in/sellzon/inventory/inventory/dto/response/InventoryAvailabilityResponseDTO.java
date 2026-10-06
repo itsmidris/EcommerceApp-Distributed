@@ -5,8 +5,7 @@ import java.util.UUID;
 public record InventoryAvailabilityResponseDTO(
         UUID productId,
         String marketplaceProductId,
-        Integer stockQuantity,
-        Integer reservedQuantity,
-        Integer availableQuantity
+        Integer availableQuantity,
+        Integer blockedQuantity
 ) {
 }

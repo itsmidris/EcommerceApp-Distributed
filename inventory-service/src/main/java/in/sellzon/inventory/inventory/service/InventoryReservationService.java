@@ -4,6 +4,7 @@ import in.sellzon.inventory.inventory.dto.request.InventoryReservationRequestDTO
 import in.sellzon.inventory.inventory.dto.response.InventoryAvailabilityResponseDTO;
 import in.sellzon.inventory.inventory.dto.response.InventoryReservationResponseDTO;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface InventoryReservationService {
@@ -11,6 +12,8 @@ public interface InventoryReservationService {
     InventoryReservationResponseDTO release(UUID reservationId);
     InventoryReservationResponseDTO commit(UUID reservationId);
     void commitOrder(UUID orderId);
+    void commitProducts(UUID orderId, List<UUID> productIds);
     void releaseOrder(UUID orderId);
     InventoryAvailabilityResponseDTO getAvailability(UUID productId);
+    void expireReservations();
 }

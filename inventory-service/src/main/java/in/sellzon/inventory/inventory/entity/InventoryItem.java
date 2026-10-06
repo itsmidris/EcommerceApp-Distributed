@@ -43,8 +43,11 @@ public class InventoryItem {
     @Column(length = 200)
     private String brand;
 
-    @Column(name = "stock_quantity", nullable = false)
-    private Integer stockQuantity = 0;
+    @Column(name = "available_quantity", nullable = false)
+    private Integer availableQuantity = 0;
+
+    @Column(name = "blocked_quantity", nullable = false)
+    private Integer blockedQuantity = 0;
 
     @Column(name = "low_stock_threshold", nullable = false)
     private Integer lowStockThreshold = 5;

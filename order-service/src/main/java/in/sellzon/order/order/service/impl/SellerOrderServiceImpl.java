@@ -2,6 +2,7 @@ package in.sellzon.order.order.service.impl;
 
 import in.sellzon.order.identity.IdentityUserResponse;
 import in.sellzon.order.identity.client.IdentityUserClient;
+import in.sellzon.order.kafka.event.OrderItemReservation;
 import in.sellzon.order.order.dto.request.UpdateSellerOrderStatusRequestDTO;
 import in.sellzon.order.order.dto.response.SellerOrderAddressResponseDTO;
 import in.sellzon.order.order.dto.response.SellerOrderItemResponseDTO;
@@ -13,7 +14,6 @@ import in.sellzon.order.order.enums.OrderStatus;
 import in.sellzon.order.order.enums.PaymentMethod;
 import in.sellzon.order.order.enums.PaymentStatus;
 import in.sellzon.order.order.enums.SellerOrderStatus;
-import in.sellzon.order.order.repository.OrderItemRepository;
 import in.sellzon.order.order.repository.OrderRepository;
 import in.sellzon.order.order.repository.SellerOrderRepository;
 import in.sellzon.order.order.service.SellerOrderService;
@@ -33,7 +33,6 @@ import java.util.UUID;
 public class SellerOrderServiceImpl implements SellerOrderService {
 
     private final SellerOrderRepository sellerOrderRepository;
-    private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
     private final CurrentUserService currentUserService;
     private final IdentityUserClient identityUserClient;
@@ -118,7 +117,10 @@ public class SellerOrderServiceImpl implements SellerOrderService {
                             order.getId(),
                             sellerOrder.getId(),
                             sellerOrder.getItems().stream()
-                                    .map(item -> item.getProductId())
+                                    .map(item ->
+                                            new OrderItemReservation(
+                                                    item.getProductId(), item.getQuantity()
+                                            ))
                                     .toList()
                     )
             );

@@ -9,11 +9,21 @@ import org.springframework.kafka.config.TopicBuilder;
 public class KafkaTopicConfig {
 
     public static final String INVENTORY_STOCK_EVENTS_TOPIC = "inventory-stock-events";
+    public static final String ORDER_EVENTS_TOPIC = "order-events";
 
     @Bean
     public NewTopic inventoryStockEventsTopic() {
         return TopicBuilder
                 .name(INVENTORY_STOCK_EVENTS_TOPIC)
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic orderEventsTopic() {
+        return TopicBuilder
+                .name(ORDER_EVENTS_TOPIC)
                 .partitions(3)
                 .replicas(1)
                 .build();

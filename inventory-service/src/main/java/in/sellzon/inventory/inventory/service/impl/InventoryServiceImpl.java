@@ -40,7 +40,6 @@ public class InventoryServiceImpl implements InventoryService {
     private final InventorySettingsRepository settingsRepository;
     private final CurrentUserService currentUserService;
     private final CatalogClient catalogClient;
-    private final InventoryReservationRepository reservationRepository;
     private final InventoryStockEventProducer inventoryStockEventProducer;
 
     @Override
@@ -76,21 +75,18 @@ public class InventoryServiceImpl implements InventoryService {
             throw new BusinessException("ORDER and CANCELLATION adjustments are system controlled");
         }
 
-        int previous = item.getStockQuantity();
+        int previousAvailable = item.getAvailableQuantity();
 
-        int next = calculateNextStock(previous, request.operation(), request.quantity());
+        int nextAvailable =
+                calculateNextStock(previousAvailable, request.operation(), request.quantity());
 
-        int reserved = getReservedQuantity(item.getProductId());
-
-        if (next < reserved) throw new BusinessException("Stock cannot be lower than currently reserved quantity: " + reserved);
-
-        int change = next - previous;
+        int change = nextAvailable - previousAvailable;
 
         if (change == 0) return mapItem(item);
 
         validateAdjustmentType(request.type(), change);
 
-        item.setStockQuantity(next);
+        item.setAvailableQuantity(nextAvailable);
 
         itemRepository.save(item);
 
@@ -99,11 +95,11 @@ public class InventoryServiceImpl implements InventoryService {
                         UUID.randomUUID(),
                         item.getProductId(),
                         item.getMarketplaceProductId(),
-                        item.getStockQuantity()
+                        item.getAvailableQuantity()
                 )
         );
 
-        saveAdjustment(item, change, previous, next, request.type(), normalizeReason(request.reason()));
+        saveAdjustment(item, change, previousAvailable, nextAvailable, request.type(), normalizeReason(request.reason()));
 
         return mapItem(item);
     }
@@ -164,7 +160,8 @@ public class InventoryServiceImpl implements InventoryService {
         item.setSku(p.sku());
         item.setTitle(p.title());
         item.setBrand(p.brand());
-        item.setStockQuantity(p.stockQuantity() == null ? 0 : p.stockQuantity());
+        item.setAvailableQuantity(p.stockQuantity() == null ? 0 : p.stockQuantity());
+        item.setBlockedQuantity(0);
         item.setStatus(p.status() == null ? "ACTIVE" : p.status());
         item.setLowStockThreshold(DEFAULT_LOW_STOCK_THRESHOLD);
 
@@ -231,7 +228,9 @@ public class InventoryServiceImpl implements InventoryService {
                 .map(InventorySettings::getLowStockThreshold)
                 .orElse(item.getLowStockThreshold());
 
-        int stock = item.getStockQuantity();
+        int available = item.getAvailableQuantity();
+
+        int blocked = item.getBlockedQuantity();
 
         return new InventoryProductResponseDTO(
                 item.getProductId(),
@@ -239,20 +238,14 @@ public class InventoryServiceImpl implements InventoryService {
                 item.getSku(),
                 item.getTitle(),
                 item.getBrand(),
-                stock,
+                available,
+                blocked,
                 threshold,
-                stock > 0 && stock <= threshold,
-                stock == 0, item.getStatus(),
+                available > 0 && available <= threshold,
+                available == 0,
+                item.getStatus(),
                 item.getUpdatedAt()
         );
-    }
-
-    private int getReservedQuantity(UUID productId) {
-
-        Long v = reservationRepository
-                .sumQuantityByProductIdAndStatus(productId, InventoryReservationStatus.ACTIVE);
-
-        return v == null ? 0 : Math.toIntExact(v);
     }
 
     private String normalizeId(String id) {
