@@ -37,7 +37,7 @@ const CustomerStore = (() => {
         const finalUrl =
             url.startsWith("http://") || url.startsWith("https://")
                 ? url
-                : `http://localhost:8082${url}`;
+                : `http://localhost:8000${url}`;
 
         return `<img
                     class="${cls}"

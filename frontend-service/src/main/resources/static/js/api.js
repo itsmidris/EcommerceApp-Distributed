@@ -1,99 +1,15 @@
 const SellzonAPI = (() => {
 
     const SERVICE_URLS = {
-        identity: "http://localhost:8081",
-        catalog: "http://localhost:8082",
-        order: "http://localhost:8083",
-        cart: "http://localhost:8084",
-        inventory: "http://localhost:8085",
-        payment: "http://localhost:8086"
+        gateway: "http://localhost:8000"
     };
 
     function resolveUrl(url) {
-
-        if (!url || /^https?:\/\//i.test(url)) {
+        if (/^https?:\/\//i.test(url)) {
             return url;
         }
 
-        /* =====================================================
-           IDENTITY SERVICE - 8081
-           ===================================================== */
-
-        if (
-            url.startsWith("/api/auth/") ||
-            url === "/api/users" ||
-            url.startsWith("/api/users/") ||
-            url.startsWith("/api/customer/addresses")
-        ) {
-            return `${SERVICE_URLS.identity}${url}`;
-        }
-
-
-        /* =====================================================
-           CATALOG SERVICE - 8082
-           ===================================================== */
-
-        if (
-            url.startsWith("/api/products") ||
-            url.startsWith("/api/categories/tree") ||
-            url.startsWith("/api/admin/categories") ||
-            url.startsWith("/api/admin/attributes") ||
-            url.startsWith("/api/admin/category-attributes") ||
-            url.startsWith("/api/seller/products") ||
-            url.startsWith("/api/seller/categories")
-        ) {
-            return `${SERVICE_URLS.catalog}${url}`;
-        }
-
-
-        /* =====================================================
-           ORDER SERVICE - 8083
-           ===================================================== */
-
-        if (
-            url.startsWith("/api/customer/checkout") ||
-            url.startsWith("/api/customer/orders") ||
-            url.startsWith("/api/seller/orders")
-        ) {
-            return `${SERVICE_URLS.order}${url}`;
-        }
-
-
-        /* =====================================================
-           CART SERVICE - 8084
-           ===================================================== */
-
-        if (
-            url.startsWith("/api/customer/cart")
-        ) {
-            return `${SERVICE_URLS.cart}${url}`;
-        }
-
-
-        /* =====================================================
-           INVENTORY SERVICE - 8085
-           ===================================================== */
-
-        if (
-            url.startsWith("/api/seller/inventory") ||
-            url.startsWith("/api/internal/inventory")
-        ) {
-            return `${SERVICE_URLS.inventory}${url}`;
-        }
-
-
-        /* =====================================================
-           PAYMENT SERVICE - 8086
-           ===================================================== */
-
-        if (
-            url.startsWith("/api/customer/payments")
-        ) {
-            return `${SERVICE_URLS.payment}${url}`;
-        }
-
-
-        return url;
+        return `${SERVICE_URLS.gateway}${url}`;
     }
 
     function catalogAssetUrl(url) {
@@ -107,14 +23,14 @@ const SellzonAPI = (() => {
         }
 
         if (url.startsWith("/uploads/products/")) {
-            return `${SERVICE_URLS.catalog}${url}`;
+            return `${SERVICE_URLS.gateway}${url}`;
         }
 
         return url;
     }
 
     function identityUrl(path) {
-        return `${SERVICE_URLS.identity}${path}`;
+        return `${SERVICE_URLS.gateway}${path}`;
     }
     const ACCESS_TOKEN_KEY = "sellzonAccessToken";
     const REFRESH_TOKEN_KEY = "sellzonRefreshToken";
