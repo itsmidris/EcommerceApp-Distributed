@@ -8,6 +8,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="api-gateway" />
+        <module name="config-server" />
         <module name="frontend-service" />
         <module name="eureka-server" />
       </profile>
@@ -20,8 +21,8 @@
         </processorPath>
         <module name="cart-service" />
         <module name="payment-service" />
-        <module name="inventory-service" />
         <module name="order-service" />
+        <module name="inventory-service" />
         <module name="identity-service" />
         <module name="catalog-service" />
       </profile>
@@ -32,6 +33,7 @@
       <module name="api-gateway" options="-parameters" />
       <module name="cart-service" options="-parameters" />
       <module name="catalog-service" options="-parameters" />
+      <module name="config-server" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="frontend-service" options="-parameters" />
       <module name="identity-service" options="-parameters" />
