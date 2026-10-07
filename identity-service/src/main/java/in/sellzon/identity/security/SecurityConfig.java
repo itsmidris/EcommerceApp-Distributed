@@ -68,6 +68,11 @@ public class SecurityConfig {
                                 "/customer/**",
                                 "/partner/**",
                                 "/admin/**").permitAll()
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/actuator/prometheus"
+                        ).permitAll()
                         .requestMatchers("/api/users","/api/users/public-profile/**", "/api/auth/**").permitAll()
                         .requestMatchers("/api/products/**", "/api/categories/tree").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()

@@ -34,7 +34,7 @@ public class SecurityConfig {
                         )
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                         .requestMatchers("/api/customer/checkout").hasRole("CUSTOMER")
                         .requestMatchers("/api/customer/orders/**").hasRole("CUSTOMER")
                         .requestMatchers("/api/seller/orders/**").hasRole("SELLER")

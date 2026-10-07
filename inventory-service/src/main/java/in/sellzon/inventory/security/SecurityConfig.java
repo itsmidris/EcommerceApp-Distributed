@@ -18,7 +18,7 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                         .requestMatchers("/api/seller/inventory/**").hasRole("SELLER")
                         .requestMatchers("/api/internal/inventory/**").permitAll()
                         .anyRequest().authenticated())

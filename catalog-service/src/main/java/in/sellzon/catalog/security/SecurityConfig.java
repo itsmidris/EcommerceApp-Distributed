@@ -38,6 +38,11 @@ public class SecurityConfig {
                         ).permitAll()
                         // Product/category public APIs
                         .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/actuator/prometheus"
+                        ).permitAll()
+                        .requestMatchers(
                                 "/api/products/**",
                                 "/api/categories/tree"
                         ).permitAll()

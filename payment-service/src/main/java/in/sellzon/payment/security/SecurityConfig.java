@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                         .requestMatchers("/api/customer/payments/**").hasRole("CUSTOMER")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth ->
