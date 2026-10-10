@@ -34,3 +34,7 @@ build/
 
 ### Env ###
 .env
+
+
+# JWT private signing keys — never commit
+**/src/main/resources/keys/private_key.pem
