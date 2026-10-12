@@ -8,6 +8,11 @@ services:
     image: redis:7
     container_name: sellzon-redis
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "6379:6379"
     volumes:
@@ -25,6 +30,11 @@ services:
     image: apache/kafka:4.0.0
     container_name: sellzon-kafka
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "9092:9092"
     environment:
@@ -72,6 +82,11 @@ services:
       context: ./eureka-server
     container_name: sellzon-eureka
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8761:8761"
     networks:
@@ -96,6 +111,11 @@ services:
       context: ./config-server
     container_name: sellzon-config-server
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8888:8888"
     volumes:
@@ -131,6 +151,11 @@ services:
     volumes:
       - /opt/sellzon/keys:/opt/sellzon/keys:ro
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8081:8081"
     environment:
@@ -169,6 +194,11 @@ services:
       context: ./catalog-service
     container_name: sellzon-catalog
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8082:8082"
     environment:
@@ -212,6 +242,11 @@ services:
       context: ./inventory-service
     container_name: sellzon-inventory
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8085:8085"
     environment:
@@ -259,6 +294,11 @@ services:
       context: ./cart-service
     container_name: sellzon-cart
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8084:8084"
     environment:
@@ -294,6 +334,11 @@ services:
       context: ./order-service
     container_name: sellzon-order
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8083:8083"
     environment:
@@ -338,6 +383,11 @@ services:
       context: ./payment-service
     container_name: sellzon-payment
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8086:8086"
     environment:
@@ -375,6 +425,11 @@ services:
       context: ./api-gateway
     container_name: sellzon-api-gateway
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8000:8000"
     environment:
@@ -411,6 +466,11 @@ services:
       context: ./frontend-service
     container_name: sellzon-frontend
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8080:8080"
     depends_on:
@@ -428,6 +488,11 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.1.4
     container_name: sellzon-elasticsearch
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
@@ -457,6 +522,11 @@ services:
     image: docker.elastic.co/logstash/logstash:9.1.4
     container_name: sellzon-logstash
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "5000:5000"
       - "9600:9600"
@@ -478,6 +548,11 @@ services:
     image: docker.elastic.co/kibana/kibana:9.1.4
     container_name: sellzon-kibana
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "5601:5601"
     environment:
@@ -498,6 +573,11 @@ services:
     image: prom/prometheus:latest
     container_name: sellzon-prometheus
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "9090:9090"
     volumes:
@@ -530,6 +610,11 @@ services:
     image: grafana/grafana:latest
     container_name: sellzon-grafana
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "3000:3000"
     volumes:
