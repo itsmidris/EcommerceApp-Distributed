@@ -127,10 +127,14 @@ services:
     build:
       context: ./identity-service
     container_name: sellzon-identity
+    volumes:
+      - /opt/sellzon/keys:/opt/sellzon/keys:ro
     restart: unless-stopped
     ports:
       - "8081:8081"
     environment:
+      JWT_PRIVATE_KEY_PATH: file:/opt/sellzon/keys/private_key.pem
+      JWT_PUBLIC_KEY_PATH: file:/opt/sellzon/keys/public_key.pem
       DB_URL: ${IDENTITY_DB_URL}
       DB_USERNAME: ${POSTGRES_USERNAME}
       DB_PASSWORD: ${POSTGRES_PASSWORD}

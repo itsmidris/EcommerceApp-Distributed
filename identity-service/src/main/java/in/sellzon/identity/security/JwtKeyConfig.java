@@ -2,7 +2,8 @@ package in.sellzon.identity.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -53,47 +54,48 @@ public class JwtKeyConfig {
                 .build();
     }
 
+    private String readKey(String location) throws Exception {
+        Resource resource = new DefaultResourceLoader().getResource(location);
+
+        try (var inputStream = resource.getInputStream()) {
+            return new String(
+                    inputStream.readAllBytes(),
+                    StandardCharsets.UTF_8
+            );
+        }
+    }
+
     private RSAPrivateKey loadPrivateKey() throws Exception {
-
-        ClassPathResource resource = new ClassPathResource("keys/private_key.pem");
-
-        String key = new String(
-                resource.getInputStream().readAllBytes(),
-                StandardCharsets.UTF_8
+        String location = System.getenv().getOrDefault(
+                "JWT_PRIVATE_KEY_PATH",
+                "classpath:keys/private_key.pem"
         );
 
-        key = key
+        String key = readKey(location)
                 .replace("-----BEGIN PRIVATE KEY-----", "")
                 .replace("-----END PRIVATE KEY-----", "")
                 .replaceAll("\\s+", "");
 
         byte[] decoded = Base64.getDecoder().decode(key);
-
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
-
         KeyFactory factory = KeyFactory.getInstance("RSA");
 
         return (RSAPrivateKey) factory.generatePrivate(spec);
     }
 
     private RSAPublicKey loadPublicKey() throws Exception {
-
-        ClassPathResource resource = new ClassPathResource("keys/public_key.pem");
-
-        String key = new String(
-                resource.getInputStream().readAllBytes(),
-                StandardCharsets.UTF_8
+        String location = System.getenv().getOrDefault(
+                "JWT_PUBLIC_KEY_PATH",
+                "classpath:keys/public_key.pem"
         );
 
-        key = key
+        String key = readKey(location)
                 .replace("-----BEGIN PUBLIC KEY-----", "")
                 .replace("-----END PUBLIC KEY-----", "")
                 .replaceAll("\\s+", "");
 
         byte[] decoded = Base64.getDecoder().decode(key);
-
         X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
-
         KeyFactory factory = KeyFactory.getInstance("RSA");
 
         return (RSAPublicKey) factory.generatePublic(spec);

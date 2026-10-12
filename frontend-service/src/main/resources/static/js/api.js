@@ -1,7 +1,7 @@
 const SellzonAPI = (() => {
 
     const SERVICE_URLS = {
-        gateway: "http://localhost:8000"
+        gateway: ""
     };
 
     function resolveUrl(url) {
@@ -38,8 +38,14 @@ const SellzonAPI = (() => {
 
     function getPortal() {
         const host = window.location.hostname.toLowerCase();
-        if (host === "admin.localhost") return "admin";
-        if (host === "partner.localhost") return "partner";
+        if (host === "admin.localhost" || host === "admin.sellzon.shop") {
+                return "admin";
+            }
+
+        if (host === "partner.localhost" || host === "partner.sellzon.shop") {
+            return "partner";
+        }
+
         return "customer";
     }
 
