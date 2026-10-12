@@ -77,6 +77,8 @@ services:
     build:
       context: ./eureka-server
     container_name: sellzon-eureka
+    ports:
+      - "127.0.0.1:8761:8761"
     restart: unless-stopped
     logging:
       driver: json-file
