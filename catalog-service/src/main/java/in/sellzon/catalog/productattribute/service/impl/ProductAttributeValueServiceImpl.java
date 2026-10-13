@@ -25,7 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -125,6 +128,55 @@ public class ProductAttributeValueServiceImpl implements ProductAttributeValueSe
 
         productAttributeValueRepository.delete(entity);
     }
+
+
+    @Override
+    public void createValuesForNewProduct(Product product, List<CategoryAttribute> categoryAttributes, List<SaveProductAttributeValueRequestDTO> requests) {
+
+        Map<UUID, CategoryAttribute> attributesById =
+                categoryAttributes
+                        .stream()
+                        .collect(Collectors.toMap(
+                                CategoryAttribute::getId,
+                                Function.identity()
+                        ));
+
+        List<ProductAttributeValue> values = new ArrayList<>();
+
+        for (SaveProductAttributeValueRequestDTO request : requests) {
+            if (request == null) {
+                continue;
+            }
+
+            boolean hasValue = request.value() != null && !request.value().isBlank();
+
+            boolean hasOptions = request.optionIds() != null && !request.optionIds().isEmpty();
+
+            if (!hasValue && !hasOptions) {
+                continue;
+            }
+
+            CategoryAttribute categoryAttribute = attributesById.get(request.categoryAttributeId());
+
+            if (categoryAttribute == null) {
+                throw new IllegalArgumentException("Attribute does not belong to the selected category");
+            }
+
+            ProductAttributeValue entity = new ProductAttributeValue();
+            entity.setProduct(product);
+            entity.setCategoryAttribute(categoryAttribute);
+
+            // Preserve existing type-specific validation.
+            populateValue(entity, categoryAttribute, request);
+
+            values.add(entity);
+        }
+
+        if (!values.isEmpty()) {
+            productAttributeValueRepository.saveAll(values);
+        }
+    }
+
 
     private Product getOwnedProduct(String marketplaceProductId) {
 

@@ -10,7 +10,6 @@ import in.sellzon.catalog.common.exception.DuplicateResourceException;
 import in.sellzon.catalog.common.exception.ResourceNotFoundException;
 import in.sellzon.catalog.identity.response.IdentityUserResponse;
 import in.sellzon.catalog.kafka.event.ProductCreatedEvent;
-import in.sellzon.catalog.kafka.producer.ProductEventProducer;
 import in.sellzon.catalog.product.dto.request.CreateProductRequestDTO;
 import in.sellzon.catalog.product.dto.request.UpdateProductRequestDTO;
 import in.sellzon.catalog.product.dto.response.ProductResponseDTO;
@@ -25,6 +24,7 @@ import in.sellzon.catalog.productimage.repository.ProductImageRepository;
 import in.sellzon.catalog.security.CurrentUserService;
 import in.sellzon.catalog.identity.client.IdentityUserClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductAttributeValueService productAttributeValueService;
     private final IdentityUserClient identityUserClient;
     private final ProductImageRepository productImageRepository;
-    private final ProductEventProducer productEventProducer;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -80,7 +80,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product savedProduct = productRepository.save(product);
 
-        productEventProducer.publish(
+        applicationEventPublisher.publishEvent(
                 new ProductCreatedEvent(
                         UUID.randomUUID(),
                         savedProduct.getId(),
@@ -94,20 +94,15 @@ public class ProductServiceImpl implements ProductService {
                 )
         );
 
-        for (SaveProductAttributeValueRequestDTO attributeRequest
-                : request.attributes()) {
 
-            if (isEmptyAttributeValue(attributeRequest)) {
-                continue;
-            }
+        productAttributeValueService.createValuesForNewProduct(
+                savedProduct,
+                categoryAttributes,
+                request.attributes()
+        );
 
-            productAttributeValueService.createValue(
-                    savedProduct.getMarketplaceProductId(),
-                    attributeRequest
-            );
-        }
 
-        return mapToResponse(savedProduct);
+        return mapToInternalResponse(savedProduct);
     }
 
     @Override

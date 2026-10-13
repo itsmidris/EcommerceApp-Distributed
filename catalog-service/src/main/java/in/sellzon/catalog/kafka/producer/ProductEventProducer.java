@@ -15,12 +15,27 @@ public class ProductEventProducer {
         this.kafkaTemplate = kafkaTemplate;
     }
 
+
     public void publish(ProductCreatedEvent event) {
 
-        kafkaTemplate.send(
-                PRODUCT_EVENTS_TOPIC,
-                event.marketplaceProductId(),
-                event
-        );
+        kafkaTemplate.send(PRODUCT_EVENTS_TOPIC, event.marketplaceProductId(), event)
+                .whenComplete((result, exception) -> {
+                    if (exception != null) {
+                        org.slf4j.LoggerFactory.getLogger(ProductEventProducer.class)
+                        .error(
+                                "Failed to publish PRODUCT_CREATED: marketplaceProductId={}",
+                                event.marketplaceProductId(),
+                                exception
+                        );
+                    } else {
+                        org.slf4j.LoggerFactory.getLogger(ProductEventProducer.class)
+                        .info(
+                                "Published PRODUCT_CREATED: marketplaceProductId={}, partition={}, offset={}",
+                                event.marketplaceProductId(),
+                                result.getRecordMetadata().partition(),
+                                result.getRecordMetadata().offset()
+                        );
+            }
+        });
     }
 }
