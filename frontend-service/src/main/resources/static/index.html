@@ -1,3 +1,40 @@
-<!doctype html><html><head><meta charset="utf-8"><script>
-(function(){const h=location.hostname.toLowerCase();if(h==="admin.localhost"){location.replace("/admin/index.html");return;}if(h==="partner.localhost"){location.replace("/partner/index.html");return;}location.replace("/customer/index.html");})();
-</script></head><body></body></html>
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sellzon</title>
+    <script>
+        (function () {
+            const host = window.location.hostname.toLowerCase();
+
+            // Production portals
+            if (host === "admin.sellzon.shop") {
+                window.location.replace("/admin/login.html");
+                return;
+            }
+
+            if (host === "partner.sellzon.shop") {
+                window.location.replace("/partner/login.html");
+                return;
+            }
+
+            // Local development portals
+            if (host === "admin.localhost") {
+                window.location.replace("/admin/index.html");
+                return;
+            }
+
+            if (host === "partner.localhost") {
+                window.location.replace("/partner/index.html");
+                return;
+            }
+
+            // Customer storefront remains the default
+            window.location.replace("/customer/index.html");
+        })();
+    </script>
+</head>
+<body></body>
+</html>
