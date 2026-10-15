@@ -1,2 +1,16 @@
+# Environment files and secrets
 .env
+.env.local
 .env.prod
+.env.*
+!.env.example
+
+# Local Docker overrides
+docker-compose.local.yml
+compose.override.yml
+
+# Private keys and certificates
+private_key.pem
+*.key
+*.p12
+*.pfx
