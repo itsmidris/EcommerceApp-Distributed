@@ -1,7 +1,17 @@
 const SellzonAPI = (() => {
 
     const SERVICE_URLS = {
-        gateway: ""
+        gateway: (() => {
+            const hostname = window.location.hostname.toLowerCase();
+            const isLocal =
+                hostname === "localhost" ||
+                hostname === "127.0.0.1" ||
+                hostname.endsWith(".localhost");
+
+            return isLocal
+                ? `${window.location.protocol}//${window.location.hostname}:8000`
+                : "";
+        })()
     };
 
     function resolveUrl(url) {
