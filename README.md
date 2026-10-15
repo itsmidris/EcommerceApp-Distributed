@@ -1,485 +1,537 @@
-# Sellzon --- Local Development, Docker, Environment & Recovery Notes
+# Sellzon — Complete Local Setup, Run & Test Guide
 
-This README records the current working setup for
-**EcommerceApp-Distributed / Sellzon**. It covers Git updates,
-environment variables, frontend API routing, Docker commands, RAM
-recovery, health checks and production safety.
+This guide walks through the full workflow for **EcommerceApp-Distributed (Sellzon)** on Windows: pull the latest code, configure environment variables, start Docker services, test the APIs and frontend, troubleshoot common issues, and keep production safe.
 
-> **Safety:** Local development and the production VPS are separate
-> environments. Do not run local commands on the VPS unintentionally.
-> Never use `docker compose down -v` as a routine restart; it can delete
-> named volumes and data.
+> **Scope:** This guide is for local development on Windows using PowerShell and Docker Desktop. Production VPS instructions are separated near the end.
+>
+> **Safety:** Never commit `.env`, `.env.local`, `.env.prod`, private keys, tokens, or real credentials. Do not run `docker compose down -v` as a routine fix; it can delete volumes and data.
 
-## 1. Project locations
+---
 
-**Local Windows repository**
+## Quick workflow
 
-``` text
-D:\Imran\EcommerceApp-Distributed
-```
+1. Check Git and preserve local work.
+2. Pull the intended branch from GitHub.
+3. Create/check `.env.local`.
+4. Validate Docker Compose configuration.
+5. Start infrastructure.
+6. Start application services.
+7. Test Gateway, products, categories, and the browser.
+8. Check logs and RAM if something fails.
+9. Commit/push only intended files.
+10. Deploy to the VPS separately and deliberately.
 
-**Production VPS repository**
+---
 
-``` text
-/home/admin/apps/Sellzon
-```
+## 1. Prerequisites
 
-Run local commands in PowerShell from the Windows repository root. VPS
-commands must be run in the SSH terminal and only when intentionally
-working on production.
+Before starting, make sure these are available:
 
-## 2. Known local endpoints
+- Git
+- Docker Desktop using the Linux container engine
+- PowerShell
+- The Sellzon repository
+- Windows PostgreSQL if using the existing local databases
 
-  Component                             Address
-  ------------------------------------- ------------------------------------------------
-  Storefront                            `http://localhost:8080/customer/index.html`
-  Admin login                           `http://admin.localhost:8080/admin/login.html`
-  API Gateway                           `http://localhost:8000`
-  Gateway health                        `http://localhost:8000/actuator/health`
-  Eureka                                `http://localhost:8761`
-  Config Server inside Docker network   `http://config-server:8888`
-  Windows PostgreSQL host               `localhost:5432`
-  PostgreSQL from Docker                `host.docker.internal:5432`
-  Kafka from Docker                     `kafka:9093`
+Repository:
 
-The stack includes Eureka, Config Server, Identity, Catalog, Inventory,
-Cart, Order, Payment, API Gateway, Frontend, Kafka and Redis.
-Observability services include Elasticsearch, Kibana, Logstash,
-Prometheus and Grafana.
+`https://github.com/itsmidris/EcommerceApp-Distributed.git`
 
-## 3. Pull updates from GitHub safely
+Local path:
 
-Repository: `https://github.com/itsmidris/EcommerceApp-Distributed.git`
+`D:\Imran\EcommerceApp-Distributed`
 
-### Check current state
+Open PowerShell and go to the project:
 
-``` powershell
+```powershell
 cd D:\Imran\EcommerceApp-Distributed
+```
+
+Check Docker is responding:
+
+```powershell
+docker version
+docker ps
+docker compose version
+```
+
+If these commands fail, fix Docker Desktop first. Do not delete Docker data as a first response to an engine error.
+
+## 2. Pull the latest code safely
+
+### 2.1 Check your current branch and changes
+
+```powershell
 git status --short --branch
-git remote -v
 git branch --show-current
+git remote -v
 ```
 
-Review modified and untracked files before pulling. Preserve changes you
-need.
+Review all modified and untracked files. Commit or otherwise preserve work you need before pulling. Do not discard changes just to make Git pull succeed.
 
-### Optional: stash local work
+### 2.2 Fetch remote updates
 
-If you have work that is not committed and you want to temporarily put
-it aside:
-
-``` powershell
-git stash push -u -m "WIP before pulling Sellzon updates"
-git stash list
-```
-
-After pulling, inspect the stash and restore it when ready:
-
-``` powershell
-git stash apply
-```
-
-Resolve conflicts carefully. Do not use `git reset --hard` or
-`git clean -fd` as a shortcut.
-
-### Fetch and pull
-
-``` powershell
+```powershell
 git fetch origin
 git status -sb
 ```
 
-If your intended branch is `main` and your local branch is `main`:
+### 2.3 Pull the correct branch
 
-``` powershell
+First check the branch name from `git branch --show-current`. If your intended branch is `master`, use:
+
+```powershell
+git pull --ff-only origin master
+```
+
+If your intended branch is `main`, use:
+
+```powershell
 git pull --ff-only origin main
 ```
 
-If the project uses a different branch, replace `main` with that branch.
-`--ff-only` prevents an unexpected merge commit. If it fails because
-branches have diverged, stop and inspect rather than forcing the pull.
+Use the branch you actually work on; do not blindly switch branches. `--ff-only` avoids an unexpected merge commit. If it fails because local and remote history diverged, stop and inspect the Git state rather than forcing it.
 
-Verify afterward:
+### 2.4 Verify the pull
 
-``` powershell
+```powershell
 git status --short --branch
 git log -5 --oneline
 ```
 
-## 4. Environment variables and `.env.example`
+If `git status` shows local changes, inspect them before continuing.
 
-### File purposes
+### Optional: preserve uncommitted work with a stash
 
-  -----------------------------------------------------------------------
-  File                    Purpose                 Commit?
-  ----------------------- ----------------------- -----------------------
-  `.env.example`          Safe template of        Yes
-                          required variable names 
-                          and placeholders        
+Use this only when you have confirmed that stashing is appropriate:
 
-  `.env.local`            Local development       **No**
-                          settings and            
-                          credentials             
+```powershell
+git stash push -u -m "WIP before pulling Sellzon updates"
+git stash list
+```
 
-  `.env.prod`             Production VPS settings **No**
+After pulling, restore it when ready:
 
-  `.env`                  Default Compose         **No**
-                          environment, if used    
-  -----------------------------------------------------------------------
+```powershell
+git stash apply
+```
 
-Use `.env.example` as the checklist of required variables. If it is
-incomplete, update it with missing **variable names and safe
-placeholders only**. Do not put real secrets in it.
+Review and resolve any conflicts carefully. Avoid `git reset --hard` and `git clean -fd` as shortcuts.
 
-### Local setup
+---
 
-1.  Inspect `.env.example`, `docker-compose.yml`, service configuration
-    and `config-repo` to identify the exact environment variable names
-    used by the application.
-2.  Create/update `.env.local` with those exact names.
-3.  For Windows PostgreSQL accessed from Docker, use
-    `host.docker.internal:5432`, not `localhost:5432` inside a
-    container.
-4.  The local setup expects these databases: `identity_db`,
-    `catalog_db`, `inventory_db`, `order_db`, `payment_db`.
-5.  Configure development values for database credentials,
-    JWT/signing-key configuration, email/SMTP, Google OAuth, Cloudinary,
-    internal-service authentication and Razorpay test settings as
-    required by the current code.
-6.  Never use production credentials for local development.
+## 3. Configure environment variables
 
-Validate before starting:
+### 3.1 Understand the environment files
 
-``` powershell
+| File | Role | Commit? |
+|---|---|---|
+| `.env.example` | Template containing variable names and safe placeholders | Yes |
+| `.env.local` | Your local development settings and credentials | **No** |
+| `.env.prod` | Production settings, if maintained locally | **No** |
+| `.env` | Default Compose environment, if used | **No** |
+
+Use `.env.example` as a checklist. The exact required variables are determined by the current `docker-compose.yml` and service configuration. Do not assume the template includes every required variable without validating it.
+
+### 3.2 Create `.env.local`
+
+If `.env.local` already exists and your local setup works, **do not overwrite it**. Keep your existing database settings and credentials.
+
+If it does not exist, copy the template:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Edit `.env.local` in your editor and replace placeholders with your own local values. Do not put production secrets in this file.
+
+For the current local setup:
+
+- PostgreSQL runs on Windows, so container database URLs use `host.docker.internal:5432`.
+- Expected local databases: `identity_db`, `catalog_db`, `inventory_db`, `order_db`, `payment_db`.
+- Docker-internal service URLs use Compose service names, not `localhost`.
+- Kafka's internal address is `kafka:9093` for the current setup.
+- `SELLZON_KEYS_DIR` should point to your local key directory, for example `D:/Imran/Sellzon-local-keys`, if that directory contains the expected key files.
+
+Do not paste or commit the contents of `.env.local`.
+
+### 3.3 Validate environment and Compose configuration
+
+Run:
+
+```powershell
 docker compose --env-file .env.local config --quiet
+```
+
+Expected: it finishes without a configuration error.
+
+Then list the Compose services:
+
+```powershell
 docker compose --env-file .env.local config --services
 ```
 
-The first command should complete without a configuration error. The
-second lists the Compose service names.
+If validation fails, read the first error and check the variable names in `.env.local` against `docker-compose.yml`. Do not print or share a fully rendered Compose configuration publicly, because it can contain secrets.
 
-**Do not invent variable names.** Names in `.env.local` must match the
-names referenced by Compose/application configuration. Update
-`.env.example` whenever a new required variable is introduced.
+### 3.4 Confirm environment files are not tracked
 
-### Secret safety
-
--   Never commit `.env`, `.env.local`, `.env.prod`, private keys, tokens
-    or real credentials.
--   Do not paste secret-bearing files or full rendered Compose
-    configuration into public places.
--   Check the Git state before pushing:
-
-``` powershell
+```powershell
 git status --short
 git ls-files .env .env.local .env.prod
 git check-ignore .env .env.local .env.prod
 ```
 
-Real environment files should be ignored and not tracked. If a secret
-was shared or committed, rotate/revoke it; deleting it from the file
-alone is not sufficient.
+The real environment files should not be tracked by Git. `.env.example` is the safe file intended for Git.
 
-## 5. Frontend `api.js`: local vs production
+---
 
-File:
+## 4. Start Sellzon locally
 
-``` text
-frontend-service/src/main/resources/static/js/api.js
-```
+Run all commands below from:
 
-The original configuration is:
+`D:\Imran\EcommerceApp-Distributed`
 
-``` javascript
-const SERVICE_URLS = {
-    gateway: ""
-};
-```
+### 4.1 Start Docker infrastructure
 
-An empty gateway makes relative paths such as `/api/products` go to the
-same origin as the frontend.
-
-### Why local needed a change
-
-Local frontend is served on port `8080`; the API Gateway is exposed on
-port `8000`. We verified:
-
--   `http://localhost:8000/api/products?page=0&size=8` → `200`.
--   `http://localhost:8000/api/categories/tree` → `200`.
--   The product API on `http://localhost:8080` → `404` before the fix.
-
-For the current local setup, `api.js` was changed to:
-
-``` javascript
-const SERVICE_URLS = {
-    gateway: "http://localhost:8000"
-};
-```
-
-The frontend was rebuilt and the user confirmed the local application
-worked.
-
-### Production warning
-
-**Do not deploy the hardcoded `http://localhost:8000` value to
-production.** In a visitor's browser, `localhost` refers to that
-visitor's own computer. The production VPS uses a reverse-proxy
-arrangement where the empty gateway setting allows same-origin
-`/api/...` requests to be routed publicly. Production product and
-category API checks returned HTTP `200` with the empty setting.
-
-Before the next deployment, make the setting environment-aware. Suitable
-designs include a runtime configuration file generated per environment
-or a local reverse proxy that makes frontend and API share one origin.
-Test local and production separately. If a CORS error appears, configure
-only the required origins/headers; do not disable security broadly.
-
-After editing frontend static files, rebuild only the frontend:
-
-``` powershell
-docker compose --env-file .env.local up -d --build frontend-service
-```
-
-Then hard-refresh the browser with **Ctrl + F5**.
-
-## 6. Docker commands
-
-Run from `D:\Imran\EcommerceApp-Distributed`.
-
-### Start minimum infrastructure
-
-``` powershell
+```powershell
 docker compose --env-file .env.local up -d redis kafka eureka-server config-server
 ```
 
-Wait for dependencies to become healthy.
+Check status:
 
-### Start application services
+```powershell
+docker compose --env-file .env.local ps -a
+```
 
-``` powershell
+Wait for health checks to settle before starting application services.
+
+### 4.2 Start the application services
+
+```powershell
 docker compose --env-file .env.local up -d identity-service catalog-service inventory-service cart-service order-service payment-service api-gateway frontend-service
 ```
 
-### Status and logs
+Check all services:
 
-``` powershell
+```powershell
 docker compose --env-file .env.local ps -a
-docker ps
-docker compose --env-file .env.local logs --tail 100 api-gateway
-docker compose --env-file .env.local logs --tail 100 identity-service
-docker compose --env-file .env.local logs --tail 100 catalog-service
 ```
 
-Follow a service's logs live:
+Look for services that are `Up` or healthy where health checks are configured. If a service repeatedly exits, do not keep rebuilding blindly—inspect its logs first.
 
-``` powershell
+### 4.3 Open the local application
+
+| Page / service | URL |
+|---|---|
+| Customer storefront | `http://localhost:8080/customer/index.html` |
+| Admin login | `http://admin.localhost:8080/admin/login.html` |
+| API Gateway | `http://localhost:8000` |
+| Gateway health | `http://localhost:8000/actuator/health` |
+
+Use valid local test accounts that already exist in your local database. Do not assume a particular password.
+
+---
+
+## 5. Test the backend APIs
+
+Run these commands in PowerShell while the stack is running.
+
+### 5.1 Gateway health
+
+```powershell
+Invoke-WebRequest "http://localhost:8000/actuator/health" -UseBasicParsing |
+    Select-Object StatusCode, Content
+```
+
+Expected: HTTP `200`, with a healthy response if dependencies are available.
+
+### 5.2 Products API
+
+```powershell
+Invoke-WebRequest "http://localhost:8000/api/products?page=0&size=8" -UseBasicParsing |
+    Select-Object StatusCode, Content
+```
+
+Expected in the previously verified local setup: HTTP `200`.
+
+### 5.3 Categories API
+
+```powershell
+Invoke-WebRequest "http://localhost:8000/api/categories/tree" -UseBasicParsing |
+    Select-Object StatusCode, Content
+```
+
+Expected in the previously verified local setup: HTTP `200`.
+
+A successful HTTP response does not necessarily mean the response contains data. Inspect the response body if the UI is empty.
+
+---
+
+## 6. Test the frontend in the browser
+
+Open:
+
+- Customer storefront: `http://localhost:8080/customer/index.html`
+- Admin login: `http://admin.localhost:8080/admin/login.html`
+
+Hard-refresh after a frontend rebuild using **Ctrl + F5**.
+
+### Browser test checklist
+
+- [ ] Storefront loads.
+- [ ] Products appear.
+- [ ] Category navigation loads.
+- [ ] Admin login page loads.
+- [ ] Login works with valid local credentials.
+- [ ] Product details and images load.
+- [ ] Cart operations work.
+- [ ] Checkout/order flows work when all required services are running.
+- [ ] Browser DevTools → Network/Console shows no unexpected 404 or CORS errors.
+
+### Understand local API routing
+
+File:
+
+`frontend-service/src/main/resources/static/js/api.js`
+
+The environment-aware configuration should send local hosts (`localhost`, `127.0.0.1`, and `*.localhost`) to the gateway on port `8000`. Production hostnames use an empty prefix so `/api/...` requests remain same-origin and are routed by the production reverse proxy.
+
+If the backend API works on port `8000` but the browser shows an error:
+
+1. Open DevTools (`F12`) → Network.
+2. Reproduce the problem.
+3. Select the failed request.
+4. Check the full Request URL, status code, and response.
+5. Confirm the URL is correct for local development.
+6. Check browser Console for CORS or JavaScript errors.
+
+Do not replace the environment-aware configuration with a hardcoded local URL for production.
+
+---
+
+## 7. Troubleshoot services and logs
+
+### 7.1 Check service status
+
+```powershell
+docker compose --env-file .env.local ps -a
+docker ps
+```
+
+### 7.2 Read logs for a service
+
+```powershell
+docker compose --env-file .env.local logs --tail 150 api-gateway
+docker compose --env-file .env.local logs --tail 150 identity-service
+docker compose --env-file .env.local logs --tail 150 catalog-service
+```
+
+Follow logs live:
+
+```powershell
 docker compose --env-file .env.local logs -f api-gateway
 ```
 
-Press `Ctrl + C` to stop following logs; this does not stop the
-container.
+Press `Ctrl + C` to stop following logs; it does not stop the container.
 
-### Rebuild one service
+### 7.3 If a service exits
 
-For frontend changes:
+```powershell
+docker compose --env-file .env.local logs --tail 200 <service-name>
+```
 
-``` powershell
+Replace `<service-name>` with the failing Compose service. Check the first meaningful exception, database connectivity, missing environment variables, dependency health and RAM pressure before rebuilding.
+
+### 7.4 Login troubleshooting
+
+- `404`: check the request URL, controller path and gateway route.
+- `401` or invalid credentials: check the local account and request contract.
+- `500`: inspect Identity and Gateway logs for the underlying exception.
+
+Do not immediately reset passwords or edit database rows. Never share credentials, tokens, cookies or secret-bearing headers.
+
+### 7.5 Config Server access
+
+The Config Server is available to other containers through `http://config-server:8888`. In the current local Compose setup, port `8888` may not be published to Windows, so `http://localhost:8888` can fail even when the container is healthy. Check the Compose port mapping before assuming Config Server is down.
+
+---
+
+## 8. Rebuild after code changes
+
+### Frontend-only change
+
+For a change to frontend static files such as `api.js`:
+
+```powershell
 docker compose --env-file .env.local up -d --build frontend-service
 ```
 
-Use the appropriate service name for a backend change. Prefer rebuilding
-only the changed service over rebuilding/restarting the entire stack.
+Then hard-refresh the browser with **Ctrl + F5** and repeat the relevant browser tests.
 
-### Stop and start services
+### Backend service change
 
-Stop application services while preserving containers and volumes:
+Rebuild only the service you changed, using its Compose service name:
 
-``` powershell
-docker compose --env-file .env.local stop frontend-service api-gateway identity-service catalog-service inventory-service cart-service order-service payment-service
+```powershell
+docker compose --env-file .env.local up -d --build <service-name>
 ```
 
-Start them again:
+Confirm the service is healthy and retest the affected API and frontend flow.
 
-``` powershell
-docker compose --env-file .env.local start frontend-service api-gateway identity-service catalog-service inventory-service cart-service order-service payment-service
-```
+**Local commands in this guide do not deploy to the VPS.** Run them from the Windows repository, not from the VPS SSH terminal.
 
-Restart only one service:
+---
 
-``` powershell
-docker compose --env-file .env.local restart api-gateway
-```
+## 9. Reduce RAM usage
 
-Avoid `docker compose down -v` during routine troubleshooting.
+The full stack can be resource-intensive, especially Kafka and Elasticsearch.
 
-## 7. When Docker consumes too much RAM
+### 9.1 Inspect resource usage
 
-The full stack can be heavy, especially with Kafka and Elasticsearch.
-Reduce load in this order.
-
-### A. Inspect usage
-
-``` powershell
+```powershell
 docker stats
 docker compose --env-file .env.local ps -a
 ```
 
-Also check Docker Desktop and Windows Task Manager.
+You can also check Docker Desktop and Windows Task Manager.
 
-### B. Stop observability first
+### 9.2 Stop observability services when not needed
 
-If you are testing login/catalog/cart and do not need logs or
-dashboards, stop these optional services:
-
-``` powershell
+```powershell
 docker compose --env-file .env.local stop grafana prometheus kibana logstash elasticsearch
 ```
 
-Restart them when needed:
+Start them again when needed:
 
-``` powershell
+```powershell
 docker compose --env-file .env.local start elasticsearch logstash kibana prometheus grafana
 ```
 
-Start Elasticsearch first and allow health checks to settle. If these
-containers are already stopped, no action is needed.
+Start Elasticsearch first and allow its health checks to settle.
 
-### C. Stop application services not needed for the current test
+### 9.3 Stop application services not needed for a limited test
 
-For a catalog-only session, for example:
+For example, for a catalog-only session:
 
-``` powershell
+```powershell
 docker compose --env-file .env.local stop payment-service order-service cart-service inventory-service
 ```
 
-Checkout/order flows will not work while their required services are
-stopped. Resume them with:
+Checkout and order flows will not work while their required services are stopped. Start them again when needed:
 
-``` powershell
+```powershell
 docker compose --env-file .env.local start inventory-service cart-service order-service payment-service
 ```
 
-### D. Stop the whole stack safely
+### 9.4 Stop the local stack safely
 
-If Windows is becoming unresponsive:
-
-``` powershell
+```powershell
 docker compose --env-file .env.local stop
 ```
 
 Resume later:
 
-``` powershell
+```powershell
 docker compose --env-file .env.local start
 docker compose --env-file .env.local ps -a
 ```
 
-`stop` preserves containers and named volumes. It does not erase the
-Windows PostgreSQL databases.
+`stop` preserves containers and named volumes. It does not erase the Windows PostgreSQL databases.
 
-### E. If Docker Desktop is stuck
+> **Never use these as routine troubleshooting commands:** Docker Desktop Clean/Purge Data, Factory Reset, `docker system prune --volumes`, or `docker compose down -v`. They can delete data or resources you still need.
 
-1.  Try stopping services through Compose.
-2.  Save work in other applications.
-3.  Restart Docker Desktop from its UI.
-4.  After it is ready, check:
+---
 
-``` powershell
-docker version
-docker ps
+## 10. Database and data protection
+
+The local Docker services connect to PostgreSQL on Windows using `host.docker.internal:5432`. Expected local databases:
+
+- `identity_db`
+- `catalog_db`
+- `inventory_db`
+- `order_db`
+- `payment_db`
+
+Local databases are separate from production. Do not point local services to production databases during normal development. Confirm the active database URL before making schema changes.
+
+If products are missing, inspect the browser request and API response before recreating databases. Preserve existing database contents and Docker volumes unless a deliberate cleanup has been reviewed.
+
+---
+
+## 11. Commit and push your changes
+
+Before staging:
+
+```powershell
+git status --short
+git diff --stat
+git diff
 ```
 
-5.  Check Compose status and logs before starting services.
+Stage only the files intended for the commit. For example:
 
-Do **not** use Docker Desktop **Clean / Purge data**, **Factory reset**,
-`docker system prune --volumes`, or `docker compose down -v` as routine
-recovery. These can delete data or resources you still need.
-
-### Memory guidance
-
-Start only the dependencies and services required for the feature being
-tested. Keep observability off unless actively working on
-monitoring/logging. Measure `docker stats` before changing JVM heaps or
-Docker memory limits; do not blindly assign large heaps to every
-service.
-
-## 8. Smoke tests
-
-### Gateway health
-
-``` powershell
-Invoke-WebRequest "http://localhost:8000/actuator/health" -UseBasicParsing |
-    Select-Object StatusCode, Content
+```powershell
+git add README.md .env.example
+git diff --cached
 ```
 
-### Products
+Review the staged diff to ensure it contains no secrets or unrelated changes. Then commit and push to your current branch:
 
-``` powershell
-Invoke-WebRequest "http://localhost:8000/api/products?page=0&size=8" -UseBasicParsing |
-    Select-Object StatusCode, Content
+```powershell
+git commit -m "docs: add complete local setup and testing guide"
+git push origin HEAD
 ```
 
-### Categories
+Do not use `git add .` without reviewing all modified and untracked files.
 
-``` powershell
-Invoke-WebRequest "http://localhost:8000/api/categories/tree" -UseBasicParsing |
-    Select-Object StatusCode, Content
-```
+---
 
-The expected result for these GET requests in the current working local
-setup is HTTP `200`.
+## 12. Production VPS: separate deployment workflow
 
-### Browser checklist
+**Do not run the local `.env.local` commands on the VPS.** Production has its own environment and configuration.
 
--   [ ] Storefront loads.
--   [ ] Products appear.
--   [ ] Category navigation loads.
--   [ ] Admin login page loads.
--   [ ] Login succeeds with valid credentials.
--   [ ] DevTools → Network/Console has no unexpected 404/CORS errors.
--   [ ] Cart, checkout and order flows work when their required services
-    are running.
+VPS repository:
 
-Do not share passwords, access/refresh tokens, cookies or secret-bearing
-headers.
-
-## 9. Database and data protection
-
-Local Docker services connect to PostgreSQL on Windows using
-`host.docker.internal:5432`. The local databases expected by the current
-setup are `identity_db`, `catalog_db`, `inventory_db`, `order_db` and
-`payment_db`.
-
-The local database is separate from production. Do not point local
-services to production databases for normal development. Before a schema
-change, confirm which database URL is active.
-
-If products do not appear, check the browser request and API response
-before recreating databases. Docker volumes may contain Kafka or
-observability data; preserve them unless a planned cleanup has been
-reviewed.
-
-## 10. Production VPS safety
-
-VPS path:
-
-``` bash
+```bash
 cd /home/admin/apps/Sellzon
 ```
 
-Production uses its own environment settings. Never copy `.env.local` or
-the local `localhost:8000` API URL into production.
+### 12.1 Read-only production checks
 
-Read-only checks:
-
-``` bash
+```bash
+git status --short --branch
 docker compose ps
 docker compose logs --tail 100 api-gateway
 ```
 
-Previously verified public GET endpoints:
+### 12.2 Pull production source only when ready
 
-``` bash
+First review local changes and production status. Then fetch and pull the intended branch. If production uses `master`:
+
+```bash
+git fetch origin
+git status -sb
+git pull --ff-only origin master
+```
+
+Use the actual production branch. A Git pull alone updates files; it does not automatically rebuild or restart running containers unless an automated deployment workflow is configured.
+
+### 12.3 Before rebuilding any production service
+
+- Verify production `.env` remains in place and is not overwritten.
+- Verify Config Server's native repository path still resolves to `/app/config-repo` inside the container.
+- Verify the production frontend uses same-origin `/api/...` routing through the reverse proxy.
+- Confirm which service needs rebuilding.
+- Consider the VPS's available RAM and avoid unnecessary full-stack builds/restarts.
+- Inspect health and logs after deployment.
+
+Deploy only after checking the change and its compatibility. Do not run `docker compose down -v`.
+
+### 12.4 Public API smoke tests
+
+These public endpoints previously returned HTTP `200`; test again after deployment:
+
+```bash
 curl -sS -o /tmp/sellzon-products-check.txt -w 'HTTP %{http_code}\n' \
   'https://sellzon.shop/api/products?page=0&size=8'
 
@@ -487,133 +539,26 @@ curl -sS -o /tmp/sellzon-categories-check.txt -w 'HTTP %{http_code}\n' \
   'https://sellzon.shop/api/categories/tree'
 ```
 
-Both returned HTTP `200` during verification; recheck when needed
-because this is not a guarantee of future availability.
+A successful GET test is useful but does not replace checking the storefront, login and relevant business flows.
 
-Production precautions:
+---
 
--   Do not change production environment files during local
-    troubleshooting.
--   Do not run `docker compose down -v`.
--   Avoid a full-stack rebuild/restart when only one service changed.
--   Review `git diff` and `git status` before pushing.
--   Review local-only files such as `application-local.properties` and
-    `application-vps.properties` before staging; do not push them unless
-    the deployment plan explicitly requires them.
--   Prefer deploying only the changed service after checking
-    compatibility and health.
--   Back up appropriately before production database/schema changes.
--   Production VPS memory has previously been limited, so avoid
-    unnecessary full-stack builds/restarts.
+## 13. Daily checklist
 
-## 11. Common troubleshooting
+For each local development session:
 
-### Frontend loads but products/categories are empty
+1. [ ] Open PowerShell in the repository.
+2. [ ] Review Git status and preserve uncommitted work.
+3. [ ] Validate `.env.local` using `docker compose --env-file .env.local config --quiet`.
+4. [ ] Start required infrastructure and application services.
+5. [ ] Check Gateway health.
+6. [ ] Test the API endpoint related to your task.
+7. [ ] Test the feature in the browser.
+8. [ ] Inspect logs and RAM usage if something fails.
+9. [ ] Stop optional services when finished.
+10. [ ] Review the Git diff before committing or pushing.
+11. [ ] Keep production deployment separate from local development.
 
-1.  Open DevTools → Network.
-2.  Inspect the failed request URL and status.
-3.  Test the same endpoint directly on port `8000`.
-4.  If Gateway works but port `8080` returns 404, check `api.js` and the
-    local proxy/origin design.
-5.  Confirm the local setting has not accidentally been deployed to
-    production.
+## 14. Keep this guide current
 
-### Login reports invalid credentials
-
-Do not immediately reset passwords or edit the database. Inspect the
-login request first:
-
--   `404`: check URL/path and gateway routing.
--   `401` or application-level invalid credentials: check the account
-    and request contract.
--   `500`: inspect Identity and Gateway logs for the underlying
-    exception.
-
-Share only the status and sanitized error message, never credentials or
-tokens.
-
-### Docker Compose engine/HTTP errors
-
-Check Docker Desktop's Linux engine:
-
-``` powershell
-docker version
-docker ps
-```
-
-If these fail, resolve Docker Desktop first. Do not delete Docker data
-to fix an engine connection error.
-
-### A service exits after startup
-
-``` powershell
-docker compose --env-file .env.local ps -a
-docker compose --env-file .env.local logs --tail 200 <service-name>
-```
-
-Replace `<service-name>` with the failing Compose service. Check the
-first meaningful exception, environment variables, dependency health and
-RAM pressure before rebuilding.
-
-### Logstash hostname warnings
-
-When Logstash is intentionally stopped, application logs may contain
-DNS/connection warnings for `logstash`. If the core application works,
-these may be non-fatal. Start Logstash only when using the logging
-pipeline, then verify whether the warnings stop.
-
-## 12. Daily workflow
-
-1.  Open PowerShell in the repository.
-2.  Check `git status --short --branch`.
-3.  Validate `.env.local` with
-    `docker compose --env-file .env.local config --quiet`.
-4.  Start only required infrastructure/services.
-5.  Verify Gateway health and test the feature in the browser.
-6.  Check logs and `docker stats` if something fails or RAM usage rises.
-7.  Stop optional observability services when finished.
-8.  Review changes before committing/pushing.
-9.  Never deploy local-only API URLs or local secrets to the VPS.
-
-## 13. Pre-push checklist
-
--   [ ] `git status` reviewed; no work was accidentally discarded.
--   [ ] `.env`, `.env.local`, `.env.prod`, private keys and credentials
-    are not tracked.
--   [ ] `.env.example` contains placeholders only.
--   [ ] Local `api.js` URL is not being pushed to production without an
-    environment-aware solution.
--   [ ] `application-local.properties` and `application-vps.properties`
-    reviewed and excluded if local-only.
--   [ ] Only intended files are staged.
--   [ ] Relevant local smoke tests pass.
--   [ ] Production deployment is planned separately and targets only the
-    necessary service.
-
-Review before staging:
-
-``` powershell
-git status --short
-git diff --stat
-git diff
-git diff --cached
-```
-
-Avoid `git add .` without reviewing all changed and untracked files.
-
-## 14. Keep this README current
-
-Update this document whenever Compose service names/ports, required
-environment variables, API routing, database hosts, JWT key mounts,
-deployment steps or recovery procedures change.
-
-### Last verified state
-
--   Local API Gateway product and category requests returned HTTP `200`.
--   Local frontend product API on port `8080` returned `404` before the
-    gateway URL was set.
--   Local `api.js` was changed to `gateway: "http://localhost:8000"`.
--   The frontend was rebuilt and the user confirmed local testing
-    worked.
--   Production frontend still uses an empty gateway value, and public
-    product/category endpoints returned HTTP `200`.
+Update this guide whenever Compose service names or ports, environment variables, API routing, database hosts, JWT key mounts, or setup/deployment procedures change.
