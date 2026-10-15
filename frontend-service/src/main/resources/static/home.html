@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sellzon · Interviewer Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* =========================================================
+           SELLZON THEME VARIABLES (Extracted from your CSS)
+           ========================================================= */
+        :root {
+          --sellzon-blue: #6f98e8;
+          --sellzon-blue-dark: #5d86d8;
+          --sellzon-bg: #eef3f9;
+          --sellzon-input: #f1f1f1;
+          --sellzon-dark: #111827;
+          --sellzon-border: #e5e7eb;
+          --text-muted: #6b7280;
+          --card-bg: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+          background-color: var(--sellzon-bg);
+          font-family: "Inter", Arial, sans-serif;
+          color: var(--sellzon-dark);
+          line-height: 1.5;
+          padding: 40px 20px;
+        }
+
+        .container {
+          max-width: 1100px;
+          margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 40px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid var(--sellzon-border);
+        }
+
+        .logo {
+          font-size: 1.5rem;
+          font-weight: 800;
+          letter-spacing: .08em;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: var(--sellzon-dark);
+          text-decoration: none;
+        }
+
+        .logo span {
+          font-size: 0.75rem;
+          font-weight: 600;
+          background: var(--sellzon-dark);
+          color: white;
+          padding: 4px 10px;
+          border-radius: 20px;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
+
+        .header-note {
+          font-size: 0.85rem;
+          color: #854d0e;
+          background: #fef9c3;
+          padding: 6px 14px;
+          border-radius: 20px;
+          border: 1px solid #fde047;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        /* Section Headings */
+        .section-header {
+          margin-bottom: 24px;
+        }
+
+        .section-header h2 {
+          font-size: 1.25rem;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 6px;
+          color: var(--sellzon-dark);
+        }
+
+        .section-header h2 i {
+          color: var(--sellzon-blue);
+          font-size: 1.1rem;
+        }
+
+        .section-header p {
+          color: var(--text-muted);
+          font-size: 0.95rem;
+          margin-left: 28px;
+        }
+
+        /* Grid Layout */
+        .card-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+          margin-bottom: 48px;
+        }
+
+        .card {
+          background: var(--card-bg);
+          border: 1px solid var(--sellzon-border);
+          border-radius: 14px;
+          padding: 24px;
+          box-shadow: 0 10px 35px rgba(25, 45, 75, 0.04);
+          display: flex;
+          flex-direction: column;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 35px rgba(25, 45, 75, 0.1);
+        }
+
+        .card-title {
+          font-size: 1.05rem;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+
+        .card-title i {
+          color: var(--sellzon-blue);
+          background: var(--sellzon-input);
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 7px;
+          font-size: 0.9rem;
+          flex-shrink: 0;
+        }
+
+        /* Credential styling - Matches auth-input */
+        .credential-box {
+          background: var(--sellzon-input);
+          border: 1px solid var(--sellzon-border);
+          border-radius: 7px;
+          padding: 12px 16px;
+          margin-bottom: 20px;
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .credential-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.9rem;
+          margin-bottom: 8px;
+          gap: 10px;
+        }
+
+        .credential-row:last-child {
+          margin-bottom: 0;
+        }
+
+        .credential-label {
+          color: var(--text-muted);
+          font-weight: 600;
+          font-size: 0.8rem;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+          flex-shrink: 0;
+        }
+
+        .credential-value {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-weight: 600;
+          background: #ffffff;
+          padding: 4px 10px;
+          border-radius: 6px;
+          border: 1px solid #d1d5db;
+          font-size: 0.8rem;
+          white-space: nowrap; /* Prevents wrapping */
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 70%;
+          text-align: right;
+        }
+
+        /* Action Button - Matches auth-primary-btn */
+        .action-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background: var(--sellzon-blue);
+          color: white;
+          text-decoration: none;
+          font-weight: 600;
+          font-size: 0.9rem;
+          padding: 12px 16px;
+          border-radius: 7px;
+          margin-top: auto;
+          transition: background 0.2s;
+          width: 100%;
+          border: 0;
+        }
+
+        .action-btn:hover {
+          background: var(--sellzon-blue-dark);
+          color: white;
+        }
+
+        /* Observability Banner */
+        .obs-banner {
+          background: var(--card-bg);
+          border: 1px solid var(--sellzon-border);
+          border-radius: 14px;
+          padding: 16px 20px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+          box-shadow: 0 10px 35px rgba(25, 45, 75, 0.04);
+        }
+
+        .obs-banner-title {
+          font-weight: 700;
+          font-size: 0.95rem;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--sellzon-dark);
+        }
+
+        .obs-banner-title i {
+          color: var(--sellzon-blue);
+        }
+
+        .obs-cred-group {
+          display: flex;
+          gap: 12px;
+          font-size: 0.85rem;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .obs-cred-group span {
+          background: var(--sellzon-input);
+          padding: 4px 10px;
+          border-radius: 6px;
+          border: 1px solid #d1d5db;
+          color: var(--sellzon-dark);
+          white-space: nowrap;
+        }
+
+        /* Technology Tags */
+        .tech-list {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 40px;
+        }
+
+        .tech-tag {
+          background: var(--card-bg);
+          border: 1px solid var(--sellzon-border);
+          padding: 6px 14px;
+          border-radius: 30px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #374151;
+        }
+
+        /* Footer */
+        footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-top: 20px;
+          border-top: 1px solid var(--sellzon-border);
+          font-size: 0.85rem;
+          color: var(--text-muted);
+        }
+
+        .back-link {
+          color: var(--text-muted);
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-weight: 600;
+        }
+
+        .back-link:hover {
+          color: var(--sellzon-blue-dark);
+        }
+
+        /* =========================================================
+           RESPONSIVE / MOBILE ADJUSTMENTS
+           ========================================================= */
+        @media (max-width: 1024px) {
+          .card-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 850px) {
+          body { padding: 20px 12px; }
+
+          header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+
+          .header-note { display: none; }
+
+          .section-header p { margin-left: 0; }
+
+          .card-grid {
+            grid-template-columns: 1fr; /* Stack all cards into 1 column */
+            gap: 16px;
+          }
+
+          .card { padding: 16px; }
+
+          /* Allow credential rows to stack vertically on mobile */
+          .credential-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+          }
+
+          .credential-value {
+            max-width: 100%;
+            width: 100%;
+            text-align: left;
+            white-space: normal; /* Allow wrapping ONLY on mobile */
+            word-break: break-all;
+            font-size: 0.85rem;
+          }
+
+          .obs-banner {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+
+          .obs-cred-group {
+            flex-direction: column;
+            width: 100%;
+          }
+
+          .obs-cred-group span {
+            text-align: center;
+          }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header>
+        <div class="logo">
+            SELLZON <span>Interviewer Hub</span>
+        </div>
+        <div class="header-note">
+            <i class="fas fa-lock"></i> Demo credentials only
+        </div>
+    </header>
+
+    <!-- APPLICATION ACCESS -->
+    <div class="section-header">
+        <h2><i class="fas fa-door-open"></i> Application access</h2>
+        <p>Use these dedicated demo accounts to explore each portal.</p>
+    </div>
+
+    <div class="card-grid">
+        <!-- Customer -->
+        <article class="card">
+            <div class="card-title">
+                <i class="fas fa-bag-shopping"></i> Customer storefront
+            </div>
+            <div class="credential-box">
+                <div class="credential-row">
+                    <span class="credential-label">Link</span>
+                    <span class="credential-value">sellzon.shop</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">Email</span>
+                    <span class="credential-value">customer@example.com</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">Password</span>
+                    <span class="credential-value">Demo123#</span>
+                </div>
+            </div>
+            <a href="https://sellzon.shop" target="_blank" class="action-btn">
+                Open storefront <i class="fas fa-external-link-alt"></i>
+            </a>
+        </article>
+
+        <!-- Partner -->
+        <article class="card">
+            <div class="card-title">
+                <i class="fas fa-store"></i> Partner / seller portal
+            </div>
+            <div class="credential-box">
+                <div class="credential-row">
+                    <span class="credential-label">Link</span>
+                    <span class="credential-value">partner.localhost</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">Email</span>
+                    <span class="credential-value">partner@example.com</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">Password</span>
+                    <span class="credential-value">Demo123#</span>
+                </div>
+            </div>
+            <a href="http://partner.localhost:8080/partner/login.html" target="_blank" class="action-btn">
+                Open partner login <i class="fas fa-external-link-alt"></i>
+            </a>
+        </article>
+
+        <!-- Admin -->
+        <article class="card">
+            <div class="card-title">
+                <i class="fas fa-shield-halved"></i> Admin portal
+            </div>
+            <div class="credential-box">
+                <div class="credential-row">
+                    <span class="credential-label">Link</span>
+                    <span class="credential-value">admin.sellzon.shop</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">Email</span>
+                    <span class="credential-value">admin@example.com</span>
+                </div>
+                <div class="credential-row">
+                    <span class="credential-label">Password</span>
+                    <span class="credential-value">Demo123#</span>
+                </div>
+            </div>
+            <a href="https://admin.sellzon.shop/admin/login.html" target="_blank" class="action-btn">
+                Open admin login <i class="fas fa-external-link-alt"></i>
+            </a>
+        </article>
+    </div>
+
+    <!-- OBSERVABILITY -->
+    <div class="section-header">
+        <h2><i class="fas fa-chart-line"></i> Observability</h2>
+        <p>Monitoring & logging endpoints.</p>
+    </div>
+
+    <!-- Unified Credential Banner -->
+    <div class="obs-banner">
+        <div class="obs-banner-title">
+            <i class="fas fa-key"></i> Universal login for all tools:
+        </div>
+        <div class="obs-cred-group">
+            <span>User: observer</span>
+            <span>Pass: admin</span>
+        </div>
+    </div>
+
+    <!-- 3x2 Grid for Observability -->
+    <div class="card-grid">
+        <!-- Eureka -->
+        <article class="card">
+            <div class="card-title"><i class="fas fa-compass"></i> Eureka</div>
+            <div class="credential-box" style="flex-grow: 0;">
+                <div class="credential-row">
+                    <span class="credential-label">URL</span>
+                    <span class="credential-value">eureka.sellzon.shop</span>
+                </div>
+            </div>
+            <a href="https://eureka.sellzon.shop/" target="_blank" class="action-btn">
+                Open Eureka <i class="fas fa-external-link-alt"></i>
+            </a>
+        </article>
+
+        <!-- Prometheus -->
+        <article class="card">
+            <div class="card-title"><i class="fas fa-fire"></i> Prometheus</div>
+            <div class="credential-box" style="flex-grow: 0;">
+                <div class="credential-row">
+                    <span class="credential-label">URL</span>
+                    <span class="credential-value">prometheus.sellzon.shop</span>
+                </div>
+            </div>
+            <a href="https://prometheus.sellzon.shop/" target="_blank" class="action-btn">
+                Open Prometheus <i class="fas fa-external-link-alt"></i>
+            </a>
+        </article>
+
+        <!-- Grafana -->
+        <article class="card">
+            <div class="card-title"><i class="fas fa-chart-pie"></i> Grafana</div>
+            <div class="credential-box" style="flex-grow: 0;">
+                <div class="credential-row">
+                    <span class="credential-label">URL</span>
+                    <span class="credential-value">grafana.sellzon.shop</span>
+                </div>
+            </div>
+            <a href="https://grafana.sellzon.shop/" target="_blank" class="action-btn">
+                Open Grafana <i class="fas fa-external-link-alt"></i>
+            </a>
+        </article>
+
+        <!-- Elasticsearch -->
+        <article class="card">
+            <div class="card-title"><i class="fas fa-magnifying-glass"></i> Elasticsearch</div>
+            <div class="credential-box" style="flex-grow: 0;">
+                <div class="credential-row">
+                    <span class="credential-label">URL</span>
+                    <span class="credential-value">elasticsearch.sellzon.shop</span>
+                </div>
+            </div>
+            <a href="https://elasticsearch.sellzon.shop/" target="_blank" class="action-btn">
+                Open Elasticsearch <i class="fas fa-external-link-alt"></i>
+            </a>
+        </article>
+
+        <!-- Logstash -->
+        <article class="card">
+            <div class="card-title"><i class="fas fa-arrow-right-arrow-left"></i> Logstash</div>
+            <div class="credential-box" style="flex-grow: 0;">
+                <div class="credential-row">
+                    <span class="credential-label">URL</span>
+                    <span class="credential-value">logstash.sellzon.shop</span>
+                </div>
+            </div>
+            <a href="https://logstash.sellzon.shop/" target="_blank" class="action-btn">
+                Open Logstash <i class="fas fa-external-link-alt"></i>
+            </a>
+        </article>
+
+        <!-- Kibana -->
+        <article class="card">
+            <div class="card-title"><i class="fas fa-chart-simple"></i> Kibana</div>
+            <div class="credential-box" style="flex-grow: 0;">
+                <div class="credential-row">
+                    <span class="credential-label">URL</span>
+                    <span class="credential-value">kibana.sellzon.shop</span>
+                </div>
+            </div>
+            <a href="https://kibana.sellzon.shop/" target="_blank" class="action-btn">
+                Open Kibana <i class="fas fa-external-link-alt"></i>
+            </a>
+        </article>
+    </div>
+
+    <!-- TECHNOLOGY HIGHLIGHTS -->
+    <div class="section-header">
+        <h2><i class="fas fa-microchip"></i> Technology highlights</h2>
+    </div>
+    <div class="tech-list">
+        <span class="tech-tag">Java 21</span>
+        <span class="tech-tag">Spring Boot</span>
+        <span class="tech-tag">Spring Security / JWT</span>
+        <span class="tech-tag">Spring Data JPA</span>
+        <span class="tech-tag">PostgreSQL</span>
+        <span class="tech-tag">Apache Kafka</span>
+        <span class="tech-tag">Redis</span>
+        <span class="tech-tag">Docker Compose</span>
+        <span class="tech-tag">Eureka</span>
+        <span class="tech-tag">Config Server</span>
+        <span class="tech-tag">API Gateway</span>
+        <span class="tech-tag">Prometheus / Grafana</span>
+        <span class="tech-tag">ELK Stack</span>
+    </div>
+
+    <footer>
+        <span>SELLZON · Interviewer Hub</span>
+        <a href="#" class="back-link">
+            Back to storefront <i class="fas fa-arrow-right"></i>
+        </a>
+    </footer>
+
+</div>
+
+</body>
+</html>
