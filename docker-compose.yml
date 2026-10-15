@@ -143,7 +143,7 @@ services:
       context: ./identity-service
     container_name: sellzon-identity
     volumes:
-      - /opt/sellzon/keys:/opt/sellzon/keys:ro
+      - ${SELLZON_KEYS_DIR:-/opt/sellzon/keys}:/opt/sellzon/keys:ro
     restart: unless-stopped
     logging:
       driver: json-file
