@@ -47,23 +47,55 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         String host = request.getServerName().toLowerCase(Locale.ROOT);
 
         String portal = switch (host) {
-            case "admin.localhost" -> "admin";
-            case "partner.localhost" -> "partner";
-            default -> "customer";
+            case "admin.localhost", "admin.sellzon.shop" -> "admin";
+            case "partner.localhost", "partner.sellzon.shop" -> "partner";
+            case "sellzon.shop", "www.sellzon.shop", "localhost" -> "customer";
+            default -> {
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "Unrecognized OAuth portal host"
+                );
+                yield null;
+            }
         };
 
-        String frontendHost = switch (portal) {
-            case "admin" -> "admin.localhost";
-            case "partner" -> "partner.localhost";
-            default -> "localhost";
-        };
+        if (portal == null) {
+            return;
+        }
 
-        String redirectUrl =
-                "http://" + frontendHost + ":8080/"
-                        + portal
-                        + "/oauth2/callback.html?code="
-                        + code;
+        boolean production = host.endsWith(".sellzon.shop") || host.equals("sellzon.shop");
 
+        String redirectUrl;
+
+        if (production) {
+            String frontendHost = switch (portal) {
+                case "admin" -> "https://admin.sellzon.shop";
+                case "partner" -> "https://partner.sellzon.shop";
+                default -> "https://sellzon.shop";
+            };
+
+            redirectUrl = frontendHost
+                    + "/" + portal
+                    + "/oauth2/callback.html?code="
+                    + java.net.URLEncoder.encode(
+                    code,
+                    java.nio.charset.StandardCharsets.UTF_8
+            );
+        } else {
+            String frontendHost = switch (portal) {
+                case "admin" -> "http://admin.localhost:8080";
+                case "partner" -> "http://partner.localhost:8080";
+                default -> "http://localhost:8080";
+            };
+
+            redirectUrl = frontendHost
+                    + "/" + portal
+                    + "/oauth2/callback.html?code="
+                    + java.net.URLEncoder.encode(
+                    code,
+                    java.nio.charset.StandardCharsets.UTF_8
+            );
+        }
         response.sendRedirect(redirectUrl);
     }
 }
