@@ -491,7 +491,15 @@ async function saveInventory() {
          * Update current stock displayed
          * inside the modal.
          */
-        document.getElementById("currentStock").textContent = data.stockQuantity;
+        // Refresh the inventory values shown in the modal using the actual API DTO fields.
+        document.getElementById("currentAvailable").textContent =
+            data.availableQuantity ?? 0;
+        document.getElementById("currentBlocked").textContent =
+            data.blockedQuantity ?? 0;
+        document.getElementById("currentThreshold").textContent =
+            data.lowStockThreshold ?? 5;
+        document.getElementById("inventoryThreshold").value =
+            data.lowStockThreshold ?? 5;
 
         /*
          * Reset quantity and note after successful save.
