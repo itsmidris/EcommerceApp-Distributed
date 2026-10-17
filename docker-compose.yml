@@ -468,6 +468,8 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.1.4
+    ports:
+      - "127.0.0.1:9200:9200"
     container_name: sellzon-elasticsearch
     restart: unless-stopped
     logging:
@@ -500,6 +502,8 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:9.1.4
+    ports:
+      - "127.0.0.1:9600:9600"
     container_name: sellzon-logstash
     restart: unless-stopped
     logging:
