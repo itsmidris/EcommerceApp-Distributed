@@ -15,7 +15,7 @@ import java.util.UUID;
         uniqueConstraints=@UniqueConstraint(name="uk_inventory_reservation_order_product", columnNames={"order_id","product_id"}),
         indexes={
                 @Index(name="idx_inventory_reservation_order", columnList="order_id"),
-                @Index(name="idx_inventory_reservation_expiry", columnList="status,expires_at")
+                @Index(name="idx_inventory_reservation_product", columnList="product_id")
         }
 )
 @Getter
@@ -44,9 +44,6 @@ public class InventoryReservation {
     @Enumerated(EnumType.STRING)
     @Column(nullable=false, length=20)
     private InventoryReservationStatus status= InventoryReservationStatus.ACTIVE;
-
-    @Column(name="expires_at", nullable=false)
-    private LocalDateTime expiresAt;
 
     @Column(name="created_at", nullable=false, updatable=false)
     private LocalDateTime createdAt;

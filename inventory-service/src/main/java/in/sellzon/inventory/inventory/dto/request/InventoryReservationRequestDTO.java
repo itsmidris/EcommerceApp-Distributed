@@ -12,11 +12,6 @@ public record InventoryReservationRequestDTO(
         UUID productId,
         @NotNull
         @Min(1)
-        Integer quantity,
-        @Min(60)
-        Long ttlSeconds
+        Integer quantity
 ) {
-    public long effectiveTtlSeconds() {
-        return ttlSeconds == null ? 900L : ttlSeconds;
-    }
 }

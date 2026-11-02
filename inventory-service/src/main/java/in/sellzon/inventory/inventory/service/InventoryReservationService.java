@@ -15,5 +15,4 @@ public interface InventoryReservationService {
     void commitProducts(UUID orderId, List<UUID> productIds);
     void releaseOrder(UUID orderId);
     InventoryAvailabilityResponseDTO getAvailability(UUID productId);
-    void expireReservations();
 }

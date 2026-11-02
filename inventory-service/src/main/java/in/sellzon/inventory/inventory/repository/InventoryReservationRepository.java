@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,5 +21,18 @@ public interface InventoryReservationRepository extends JpaRepository<InventoryR
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from InventoryReservation r where r.id=:id")
     Optional<InventoryReservation> findByIdForUpdate(@Param("id") UUID id);
-    List<InventoryReservation> findTop100ByStatusAndExpiresAtLessThanEqualOrderByExpiresAtAsc(InventoryReservationStatus status, LocalDateTime now);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        select r
+            from InventoryReservation r
+                where r.orderId = :orderId
+                    and r.status = :status
+                        order by r.productId
+        """
+    )
+    List<InventoryReservation> findByOrderIdAndStatusForUpdate(
+            @Param("orderId") UUID orderId,
+            @Param("status") InventoryReservationStatus status
+    );
 }

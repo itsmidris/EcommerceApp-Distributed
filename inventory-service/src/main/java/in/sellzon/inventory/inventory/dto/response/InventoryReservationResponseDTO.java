@@ -11,7 +11,6 @@ public record InventoryReservationResponseDTO(
         UUID productId,
         String marketplaceProductId,
         Integer quantity,
-        InventoryReservationStatus status,
-        LocalDateTime expiresAt
+        InventoryReservationStatus status
 ) {
 }

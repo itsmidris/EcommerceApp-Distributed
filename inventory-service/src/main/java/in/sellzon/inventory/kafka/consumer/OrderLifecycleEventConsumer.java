@@ -58,8 +58,7 @@ public class OrderLifecycleEventConsumer {
                     new InventoryReservationRequestDTO(
                             event.orderId(),
                             item.productId(),
-                            item.quantity(),
-                            null
+                            item.quantity()
                     )
             );
         }
