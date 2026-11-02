@@ -146,9 +146,6 @@ public class PaymentServiceImpl implements PaymentService {
             boolean valid = Utils.verifyPaymentSignature(options, keySecret);
 
             if (!valid) {
-                payment.setStatus(PaymentRecordStatus.FAILED);
-                payment.setFailureReason("Invalid Razorpay signature");
-                paymentRepository.save(payment);
                 throw new IllegalStateException("Payment signature verification failed");
             }
 
@@ -159,12 +156,7 @@ public class PaymentServiceImpl implements PaymentService {
             String razorpayStatus = razorpayPayment.get("status");
 
             if (!"captured".equalsIgnoreCase(razorpayStatus)) {
-                payment.setStatus(PaymentRecordStatus.FAILED);
-                payment.setFailureReason("Razorpay payment status: " + razorpayStatus);
-                paymentRepository.save(payment);
-                throw new IllegalStateException(
-                        "Payment is not captured yet. Current Razorpay status: " + razorpayStatus
-                );
+                throw new IllegalStateException("Payment is not captured yet. Current Razorpay status: " + razorpayStatus);
             }
 
             long razorpayAmount = ((Number) razorpayPayment.get("amount")).longValue();
@@ -173,9 +165,6 @@ public class PaymentServiceImpl implements PaymentService {
                     .longValueExact();
 
             if (razorpayAmount != expectedAmount) {
-                payment.setStatus(PaymentRecordStatus.FAILED);
-                payment.setFailureReason("Payment amount mismatch");
-                paymentRepository.save(payment);
                 throw new IllegalStateException("Payment amount does not match the Sellzon order");
             }
 
@@ -202,29 +191,51 @@ public class PaymentServiceImpl implements PaymentService {
             );
 
         } catch (RazorpayException e) {
-            payment.setStatus(PaymentRecordStatus.FAILED);
-            payment.setFailureReason(e.getMessage());
-            paymentRepository.save(payment);
             throw new IllegalStateException("Unable to verify Razorpay payment", e);
         }
     }
 
+
     @Override
     @Transactional
-    public void markPaymentFailed(String razorpayOrderId, String reason) {
+    public void markPaymentFailed(String razorpayOrderId, String razorpayPaymentId, String reason) {
+        UUID customerId = currentUserService.getCurrentUserId();
+        String accessToken = currentUserService.getCurrentAccessToken();
+
         Payment payment = paymentRepository
-                .findByRazorpayOrderIdAndCustomerId(razorpayOrderId, currentUserService.getCurrentUserId())
+                .findByRazorpayOrderIdAndCustomerId(razorpayOrderId, customerId)
                 .orElseThrow(() -> new IllegalStateException("Payment record not found"));
 
         if (payment.getStatus() == PaymentRecordStatus.SUCCESS) {
             return;
         }
 
-        payment.setStatus(PaymentRecordStatus.FAILED);
-        payment.setFailureReason(reason);
-        paymentRepository.save(payment);
+        try {
+            RazorpayClient client = new RazorpayClient(keyId, keySecret);
 
-        orderClient.markFailed(payment.getOrderId(), currentUserService.getCurrentAccessToken());
+            com.razorpay.Payment razorpayPayment = client.payments.fetch(razorpayPaymentId);
+
+            String actualOrderId = razorpayPayment.get("order_id");
+            String actualStatus = razorpayPayment.get("status");
+
+            if (!razorpayOrderId.equals(actualOrderId)) {
+                throw new IllegalStateException("Payment does not belong to the supplied Razorpay order");
+            }
+
+            if (!"failed".equalsIgnoreCase(actualStatus)) {
+                throw new IllegalStateException("Razorpay payment is not in FAILED status. Current status: " + actualStatus);
+            }
+
+            payment.setRazorpayPaymentId(razorpayPaymentId);
+            payment.setStatus(PaymentRecordStatus.FAILED);
+            payment.setFailureReason(reason);
+            paymentRepository.save(payment);
+
+            orderClient.markFailed(payment.getOrderId(), accessToken);
+
+        } catch (RazorpayException e) {
+            throw new IllegalStateException("Unable to verify Razorpay payment failure", e);
+        }
     }
 
     private CreateRazorpayOrderResponse response(Payment payment) {

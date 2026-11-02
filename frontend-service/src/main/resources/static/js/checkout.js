@@ -453,14 +453,56 @@ document.addEventListener("DOMContentLoaded", async () => {
             // PAYMENT FAILED
             // Do not call the old /razorpay/failed endpoint.
             // Payment Service does not expose that endpoint.
-            razorpay.on("payment.failed", function (response) {
+            razorpay.on("payment.failed", async function (response) {
                 const reason =
                     response?.error?.description ||
                     response?.error?.reason ||
                     "Payment failed";
-                alertBox(`Payment failed: ${reason}`);
-                button.disabled = false;
-                button.textContent = "Pay Online";
+
+                const razorpayPaymentId =
+                    response?.error?.metadata?.payment_id;
+
+                if (!razorpayPaymentId) {
+                    alertBox(
+                        "Payment failed, but payment verification is pending. Please check your order status."
+                    );
+                    button.disabled = false;
+                    button.textContent = "Pay Online";
+                    return;
+                }
+
+                try {
+                    const params = new URLSearchParams({
+                        razorpayOrderId: data.razorpayOrderId,
+                        razorpayPaymentId: razorpayPaymentId,
+                        reason: reason
+                    });
+
+                    await SellzonAPI.json(
+                        `/api/customer/payments/razorpay/failed?${params.toString()}`,
+                        {
+                            method: "POST"
+                        }
+                    );
+
+                    sessionStorage.removeItem("sellzon_checkout_request_id");
+
+                    alertBox(
+                        "Payment failed. Your order cancellation is being processed."
+                    );
+
+                    window.location.replace(
+                        `/customer/order-details.html?id=${encodeURIComponent(data.orderId)}`
+                    );
+
+                } catch (error) {
+                    alertBox(
+                        "We could not confirm the payment failure. Please check your order status before retrying."
+                    );
+
+                    button.disabled = false;
+                    button.textContent = "Pay Online";
+                }
             });
 
             // OPEN RAZORPAY

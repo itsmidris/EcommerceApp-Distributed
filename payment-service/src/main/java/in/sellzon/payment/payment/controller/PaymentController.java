@@ -32,8 +32,9 @@ public class PaymentController {
     @PostMapping("/razorpay/failed")
     public ResponseEntity<Void> markFailed(
             @RequestParam String razorpayOrderId,
+            @RequestParam String razorpayPaymentId,
             @RequestParam(defaultValue = "Payment failed in Razorpay Checkout") String reason) {
-        paymentService.markPaymentFailed(razorpayOrderId, reason);
+        paymentService.markPaymentFailed(razorpayOrderId, razorpayPaymentId, reason);
         return ResponseEntity.noContent().build();
     }
 }

@@ -8,5 +8,5 @@ import in.sellzon.payment.payment.dto.response.VerifyPaymentResponse;
 public interface PaymentService {
     CreateRazorpayOrderResponse createRazorpayOrder(CreateRazorpayOrderRequest request);
     VerifyPaymentResponse verifyPayment(VerifyPaymentRequest request);
-    void markPaymentFailed(String razorpayOrderId, String reason);
+    void markPaymentFailed(String razorpayOrderId, String razorpayPaymentId, String reason);
 }
