@@ -473,27 +473,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 try {
                     const params = new URLSearchParams({
-                        razorpayOrderId: data.razorpayOrderId,
+                        razorpayOrderId: payment.razorpayOrderId,
                         razorpayPaymentId: razorpayPaymentId,
                         reason: reason
                     });
 
+                const { response: failureResponse, data: failureData } =
                     await SellzonAPI.json(
                         `/api/customer/payments/razorpay/failed?${params.toString()}`,
-                        {
-                            method: "POST"
-                        }
-                    );
+                    {
+                        method: "POST"
+                    }
+                );
 
-                    sessionStorage.removeItem("sellzon_checkout_request_id");
-
-                    alertBox(
-                        "Payment failed. Your order cancellation is being processed."
+                if (!failureResponse.ok) {
+                    throw new Error(
+                        failureData?.message ||
+                        "Unable to confirm payment failure."
                     );
+                }
 
-                    window.location.replace(
-                        `/customer/order-details.html?id=${encodeURIComponent(data.orderId)}`
-                    );
+                sessionStorage.removeItem("sellzon_checkout_request_id");
+
+                alertBox(
+                    "Payment failed. Your order has been cancelled.",
+                    "warning"
+                );
+
+                window.location.replace(
+                    `/customer/order-details.html?id=${encodeURIComponent(data.id)}`
+                );
 
                 } catch (error) {
                     alertBox(

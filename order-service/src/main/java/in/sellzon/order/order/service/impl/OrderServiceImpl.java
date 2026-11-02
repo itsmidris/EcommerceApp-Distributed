@@ -201,6 +201,7 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
+
     @Override
     @Transactional
     public void updatePaymentStatus(UUID orderId, PaymentStatus paymentStatus) {
@@ -226,8 +227,20 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("Unsupported payment status update");
         }
 
+        if (order.getPaymentStatus() == PaymentStatus.FAILED && paymentStatus == PaymentStatus.PAID) {
+            throw new IllegalStateException("A failed payment order cannot be marked as paid");
+        }
+
         PaymentStatus previousStatus = order.getPaymentStatus();
         order.setPaymentStatus(paymentStatus);
+
+        if (paymentStatus == PaymentStatus.FAILED) {
+            order.setOrderStatus(OrderStatus.CANCELLED);
+            for (SellerOrder sellerOrder : order.getSellerOrders()) {
+                sellerOrder.setStatus(SellerOrderStatus.CANCELLED);
+            }
+        }
+
         orderRepository.save(order);
 
         if (previousStatus != PaymentStatus.FAILED && paymentStatus == PaymentStatus.FAILED) {
